@@ -23,24 +23,6 @@ start:
     call switch_to_task0
 
 load_gdt:
-    mov ax, DATA_SEL
-    mov ds, ax
-    mov dword ds:[gdt+8], 0x000007ff        ;; CODE
-    mov dword ds:[gdt+12], 0x00c09a00         
-    mov dword ds:[gdt+16], 0x000007ff       ;; DATA
-    mov dword ds:[gdt+20], 0x00c09200
-    mov dword ds:[gdt+24], 0x80000002       ;; SCRN
-    mov dword ds:[gdt+28], 0x00c0920b  
-    mov eax, tss0                           ;; TSS0
-    shl eax, 16
-    add eax, 0x0068
-    mov dword ds:[gdt+32], eax
-    mov dword ds:[gdt+36], 0x0000e900 
-    mov eax, ldt0
-    shl eax, 16
-    add eax, 0x0040
-    mov dword ds:[gdt+40], eax
-    mov dword ds:[gdt+44], 0x0000e200
     lgdt ds:[gdt_48]
     ret
 
@@ -111,8 +93,8 @@ interrupt_ignore:
 
 sys_call:
     call say_hello
-f_4:
-    jmp f_4
+f_2:
+    jmp f_2
 
 ;######################
 ;######## TEST ########
@@ -147,11 +129,11 @@ flush:
     mov bl, 32
     mov cx, 80 * 25
     mov si, 0
-f_5: 
+f_3: 
     mov gs:[si], bl
     add si, 2
     dec cx
-    jnz f_5
+    jnz f_3
     ret
 
 ;######################
@@ -174,10 +156,21 @@ gdt_48:
     dd gdt
 
 idt:
-    times 256 dd 0,0
+    times 256 dd 0, 0
 
 gdt:
-    times 256 dd 0,0
+    dw 0, 0, 0, 0
+    dw 0x07ff, 0x0000, 0x9a00, 0x00c0
+    dw 0x07ff, 0x0000, 0x9200, 0x00c0
+    dw 0x0002, 0x8000, 0x920b, 0x00c0
+    dw 0x0068, tss0, 0xe900, 0x0000
+    dw 0x0040, ldt0, 0xe200, 0x0000
+    times 250 dd 0, 0
+
+;######################
+;#### PAGE TABLE ######
+;######################
+
 
 ;######################
 ;####### TASK #########
@@ -197,5 +190,11 @@ ldt0:
     dw 0x03ff, 0x0000, 0xfa00, 0x00c0
     dw 0x03ff, 0x0000, 0xf200, 0x00c0
 
-    times 32 dd 0
+    times 1024-($-tss0) db 0
 task0_kernel_stack:
+
+    ;times 1024*63 dd 0
+
+;######################
+;######## END #########
+;######################
