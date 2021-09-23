@@ -176,6 +176,8 @@ gdt:
 ;####### TASK #########
 ;######################
 
+    times 4096*15 db 0
+
 tss0:
     dd 0
     dd task0_kernel_stack, DATA_SEL
@@ -190,11 +192,13 @@ ldt0:
     dw 0x03ff, 0x0000, 0xfa00, 0x00c0
     dw 0x03ff, 0x0000, 0xf200, 0x00c0
 
-    times 1024-($-tss0) db 0
+    times 4096-($-tss0) db 0
 task0_kernel_stack:
 
-    ;times 1024*63 dd 0
+    times 4096*63 db 0 
 
 ;######################
 ;######## END #########
 ;######################
+
+    times 1024*512-($-$$) db 0
