@@ -81,12 +81,6 @@ switch_to_task0:
 ;##############################################################################
 
 task0:
-    pushfd 
-    pop eax
-    int 0x80
-    jmp $
-    pushfd
-    pop eax
     int 0x80
     jmp $
 
@@ -95,23 +89,13 @@ task0:
 ;##############################################################################
 
 interrupt_ignore:
-    push eax
-    pushfd
-    pop eax
-    call print_reg
-    call println
-    pop eax
     iret
 
 sys_call:
-    push eax
+    mov eax, 0x41424344
     call print_reg
     call println
-    pushfd
-    pop eax
-    call print_reg
-    call println
-    pop eax
+    call print_char
     iret
 
 time_interrupt:
