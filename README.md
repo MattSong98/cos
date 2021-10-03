@@ -1,2 +1,2 @@
 # cos
-a mini os
+a mini os for fun
