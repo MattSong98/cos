@@ -40,4 +40,5 @@ run:
 
 push: 
 	git add -A
-	git commit -m "snapshot: $(shell date)"
+	git commit -m "snapshot-date:$(shell date)"
+	git push origin master
