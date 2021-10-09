@@ -10,6 +10,7 @@ SCRN_SEL equ 0x0018
 
 segment .text
 	global init
+	extern add
 init:
     mov ax, DATA_SEL
     mov ds, ax
@@ -19,7 +20,9 @@ init:
     call load_idt
     call flush_sreg
     call clear_screen
-	mov eax, 0x10101010
+	push 100
+	push 200
+	call add
 	call print_reg
     jmp $ 
 
