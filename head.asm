@@ -9,8 +9,8 @@ SCRN_SEL equ 0x0018
 ;##############################################################################
 
 segment .text
-	global init
-	extern main 
+	global init, _println, _printtb, _print_reg
+	extern main
 init:
     mov ax, DATA_SEL
     mov ds, ax
@@ -108,6 +108,23 @@ gdt:
 
 tty_pos:
     dw 0
+
+_println:
+	call println
+	ret
+
+_printtb:
+	call printtb
+	ret
+
+_print_reg:
+	push ebp
+	mov ebp, esp
+	mov eax, [ebp+8]
+	call print_reg
+	mov esp, ebp
+	pop ebp
+	ret
 
 println:
     push gs
