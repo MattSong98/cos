@@ -8,6 +8,8 @@ void _print_reg(unsigned);
 int
 main(void) {
 	_print_reg(0x100);
+	_println();
+	_print_reg(0x200);
 	while (1);
 	return 0;
 }
