@@ -37,3 +37,7 @@ clean:
 
 run: 
 	bochs -q -f bochsrc
+
+push: 
+	git add -A
+	git commit -m "$(shell date)"
