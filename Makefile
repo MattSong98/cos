@@ -40,4 +40,4 @@ run:
 
 push: 
 	git add -A
-	git commit -m "$(shell date)"
+	git commit -m "snapshot: $(shell date)"
