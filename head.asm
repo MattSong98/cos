@@ -20,8 +20,8 @@ init:
     call load_idt
     call flush_sreg
     call clear_screen
-	push 100
-	push 200
+	push 0x20
+	push 0x40
 	call add
 	call print_reg
     jmp $ 
