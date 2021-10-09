@@ -32,13 +32,21 @@ head.o: head.asm
 main.o: main.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -I. -c main.c
 
+########################
+###### ULTILITIES ######
+########################
+
 clean: 
 	rm boot kernel kernel.out head.o main.o main.d
 
-run: 
+run: pull
 	bochs -q -f bochsrc
 
 push: 
 	git add -A
 	git commit -m "snapshot-date:$(shell date)"
 	git push origin master
+
+pull: 
+	git pull origin master
+
