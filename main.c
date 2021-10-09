@@ -5,15 +5,19 @@ void _println(void);
 void _printtb(void);
 void _print_reg(unsigned);
 
+unsigned int fact(unsigned);
+
 int
 main(void) {
-	_print_reg(0x100);
+	unsigned a = 10;
+	_print_reg(a);
 	_println();
-	_print_reg(0x200);
+	_print_reg(fact(a));
 	while (1);
 	return 0;
 }
 
-void readelf() {
-
+unsigned fact(unsigned n) {
+	if (n == 1) return 1;
+	else return fact(n-1) * n;
 }
