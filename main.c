@@ -1,8 +1,12 @@
-int add(int a, int b) {
-	return a + b;
+// main called by head.s
+// from now on, we stay with C.
+
+int
+main(void) {
+	while (1);
+	return 0;
 }
 
-int test() {
-	add(1, 2);
-	return 0;
+void readelf() {
+
 }
