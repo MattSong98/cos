@@ -13,9 +13,9 @@ LDFLAGS = -m elf_i386
 ##### MAKE PROCESS #####
 ########################
 
-a.img: boot kernel
-	dd if=boot of=a.img bs=512 count=1
-	dd if=kernel of=a.img bs=512 seek=1
+cos.img: boot kernel
+	dd if=boot of=cos.img bs=512 count=1
+	dd if=kernel of=cos.img bs=512 seek=1
 
 boot: boot.asm
 	nasm boot.asm -o boot
