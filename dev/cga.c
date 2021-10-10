@@ -14,21 +14,13 @@ static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
 
-// static void update_cursor(ushort);
+static void update_cursor(ushort);
 static void write_char_to_buf(uchar);
 static void scroll_up();
 static void flush();
 
-void hello() {
-	write_char_to_buf('H');
-	write_char_to_buf('e');
-	write_char_to_buf('l');
-	write_char_to_buf('l');
-	write_char_to_buf('o');
-	flush();
-}
-
 void init_cga() {
+	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
 		atr[i] = CGA_STD_ATR;
@@ -37,7 +29,6 @@ void init_cga() {
 }
 
 void write_cga(void *ptr, int type) {
-
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
 		uchar digits[8];
@@ -78,7 +69,7 @@ void flush() {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		_copy_to_cga(buf[i], atr[i], i);
 	}
-//	update_cursor(pos);
+	update_cursor(pos);
 }
 
 void write_char_to_buf(uchar c) {
