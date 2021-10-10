@@ -22,6 +22,12 @@ main(void) {
 	_print_reg(ad2);
 	_println();
 
+	free_page(ad1);
+
+	unsigned long ad3 = get_free_page();
+	_print_reg(ad3);
+	_println();
+	
 	while (1);
 	return 0;
 }
