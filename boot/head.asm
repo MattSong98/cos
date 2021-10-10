@@ -185,8 +185,8 @@ _copy_to_cga:
 	mov esi, [ebp+16]
 	shl esi, 1
 	mov word gs:[esi], ax
-	mov esp, ebp
 	pop esi
+	mov esp, ebp
 	pop ebp
 	ret
 
