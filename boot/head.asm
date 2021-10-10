@@ -175,8 +175,8 @@ tty_pos:
 
 _copy_to_cga:
 	push ebp
-	push esi
 	mov ebp, esp
+	push esi
 	mov ax, SCRN_SEL
 	mov gs, ax
 	mov ax, [ebp+12]
