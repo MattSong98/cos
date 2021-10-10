@@ -13,31 +13,31 @@ LDFLAGS = -m elf_i386
 ##### MAKE PROCESS #####
 ########################
 
-cos.img: boot kernel
-	dd if=boot of=cos.img bs=512 count=1
-	dd if=kernel of=cos.img bs=512 seek=1
+target/cos.img: target/boot target/kernel
+	dd if=target/boot of=target/cos.img bs=512 count=1
+	dd if=target/kernel of=target/cos.img bs=512 seek=1
 
-boot: boot.asm
-	nasm boot.asm -o boot
+target/boot: boot/boot.asm
+	nasm boot/boot.asm -o target/boot
 
-kernel: kernel.out
-	$(OBJCOPY) -O binary -j .text -j .data -j .bss kernel.out kernel
+target/kernel: target/kernel.out
+	$(OBJCOPY) -O binary -j .text -j .data -j .bss target/kernel.out target/kernel
 
-kernel.out: head.o main.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o kernel.out head.o main.o
+target/kernel.out: target/head.o target/main.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o
 
-head.o: head.asm
-	nasm -f elf32 head.asm -o head.o
+target/head.o: boot/head.asm
+	nasm -f elf32 boot/head.asm -o target/head.o
 
-main.o: main.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -I. -c main.c
+target/main.o: init/main.c
+	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -I. -c init/main.c -o target/main.o
 
 ########################
 ###### ULTILITIES ######
 ########################
 
 clean: 
-	rm boot kernel kernel.out head.o main.o main.d
+	rm -rf target/*
 
 run: pull
 	bochs -q -f bochsrc
