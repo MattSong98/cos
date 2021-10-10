@@ -19,6 +19,15 @@ static void write_char_to_buf(uchar);
 static void scroll_up();
 static void flush();
 
+void hello() {
+	write_char_to_buf('H');
+	write_char_to_buf('e');
+	write_char_to_buf('l');
+	write_char_to_buf('l');
+	write_char_to_buf('o');
+	flush();
+}
+
 void init_cga() {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
