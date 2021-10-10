@@ -1,4 +1,6 @@
+#include "types.h"
 #include "cga.h"
+#include "x86.h"
 
 #define CGA_SIZE 80*25
 #define CGA_ROW_SIZE 25
@@ -12,6 +14,7 @@ static unsigned char buf[CGA_SIZE];
 static unsigned char atr[CGA_SIZE];
 static unsigned short pos;
 
+static void update_cursor(ushort);
 static void write_char_to_buf(unsigned char);
 static void scroll_up();
 static void flush();
@@ -22,6 +25,7 @@ void init_cga() {
 		atr[i] = CGA_STD_ATR;
 	}
 	flush();
+	update_cursor(pos);
 }
 
 void write_cga(void *ptr, int type) {
@@ -53,6 +57,13 @@ void clear_cga() {
 		buf[i] = ' ';
 	}
 	flush();
+}
+
+void update_cursor(ushort pos) {
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uchar) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uchar) ((pos >> 8) & 0xFF));
 }
 
 void flush() {
