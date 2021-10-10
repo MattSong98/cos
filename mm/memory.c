@@ -31,7 +31,7 @@ get_free_page() {
 	for (int i = RESERVED_PAGES; i < PAGING_PAGES; i++) {
 		if (mm_map[i] != USED) {     // get free page successfully
 			mm_map[i] = USED;
-			return LOW_MEM + (i>>12);
+			return LOW_MEM + (i<<12);
 		}
 	}
 	return 0;
