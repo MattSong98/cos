@@ -4,7 +4,7 @@
 #include "types.h"
 #include "mm.h"
 #include "cga.h"
-extern void hello();
+extern void write_cga_test();
 
 
 int
@@ -12,8 +12,7 @@ main(void) {
 
 	init_memory();
     init_cga();
-	uint a = 0x12345678;
-	write_cga(&a, TYPE_HEX);
+	write_cga_test('0', 80);
 
 	while(1);
 	return 0;

@@ -19,6 +19,12 @@ static void write_char_to_buf(uchar);
 static void scroll_up();
 static void flush();
 
+void write_cga_test(uchar c, uint len) {
+	for (uint i = 0; i < len; i++)
+		write_char_to_buf(c);
+	flush();
+}
+
 void init_cga() {
 	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
@@ -73,7 +79,7 @@ void flush() {
 }
 
 void write_char_to_buf(uchar c) {
-	if (pos == CGA_SIZE) {
+	if (pos == CGA_SIZE - 1) {
 		scroll_up();
 	}
 	buf[pos++] = c;
@@ -86,6 +92,6 @@ void scroll_up() {
 	for (ushort i = CGA_SIZE - CGA_COL_SIZE; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
 	}
-	pos = CGA_SIZE - CGA_COL_SIZE;
+	pos = CGA_SIZE - CGA_COL_SIZE - 1;
 }
 
