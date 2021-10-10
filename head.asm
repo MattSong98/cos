@@ -11,6 +11,8 @@ SCRN_SEL equ 0x0018
 segment .text
 	global init, _println, _printtb, _print_reg
 	extern main
+
+page_dir:
 init:
     mov ax, DATA_SEL
     mov ds, ax
@@ -20,8 +22,7 @@ init:
     call load_idt
     call flush_sreg
     call clear_screen
-	call main
-	jmp $
+	jmp setup_page_dir
 
 load_gdt:
     lgdt ds:[gdt_48]
@@ -59,6 +60,58 @@ flush_sreg:
     mov fs, ax
     mov gs, ax
     ret
+
+;##############################################################################
+;############################## PAGE TABLE ####################################
+;##############################################################################
+
+align 0x1000
+
+page_table:
+	times 0x10000 db 0
+
+setup_page_dir:
+	mov ax, DATA_SEL
+	mov ds, ax
+
+	mov esi, page_dir
+f_spd_1:
+	mov dword ds:[esi], 0
+	add esi, 4	
+	cmp esi, 0x1000
+	jl f_spd_1
+
+	mov ecx, 1
+	mov esi, page_dir
+f_spd_2:
+	mov eax, ecx
+	shl eax, 12
+	inc eax
+	mov ds:[esi], eax
+	add esi, 4
+	inc ecx
+	cmp ecx, 0x10
+	jle f_spd_2
+
+setup_page_table:
+	mov ecx, 0
+	mov esi, page_table
+f_spt:
+	mov eax, ecx
+	shl eax, 12
+	inc eax
+	mov ds:[esi], eax
+	add esi, 4
+	inc ecx
+	cmp ecx, 0x4000
+	jl f_spt
+
+	xor eax, eax
+	mov cr3, eax
+	mov eax, cr0
+	or eax, 0x80000000
+	mov cr0, eax
+	call main
 
 ;##############################################################################
 ;################################ INTERRUPT ###################################
