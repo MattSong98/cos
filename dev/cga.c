@@ -58,6 +58,13 @@ void write_cga(void *ptr, int type) {
 		flush();
 		return;
 	}
+
+	if (type == TYPE_CHAR) {
+		uchar c = *(uchar *)ptr;
+		write_char_to_buf(c);
+		flush();
+		return;
+	}
 }
 
 void clear_cga() {
