@@ -1,6 +1,3 @@
-// here are some useful debugging tools designed for 
-// kernel programming.
-
 #define TYPE_INT 0
 #define TYPE_USD_INT 1
 #define TYPE_SHT 2
@@ -14,7 +11,7 @@
 #define TTY_SIZE 80*25
 #define TTY_ROW_SIZE 25
 #define TTY_COL_SIZE 80
-#define TTY_STD_ATR 0b00001011
+#define TTY_STD_ATR 0x07
 
 extern void 
 _copy_to_cga (unsigned char c, unsigned char atr, unsigned short pos);
@@ -29,9 +26,7 @@ static void flush();
 
 extern void init_tty();
 extern void print_hello();
-// extern void print(void *ptr, int type);
-// extern void println(void *ptr, int type);
-// extern void printtb(void *ptr, int type);
+extern void write_tty(void *ptr, int type);
 extern void clear();
 
 void init_tty() {
@@ -49,6 +44,28 @@ void print_hello() {
 	print_to_tty('l');
 	print_to_tty('o');
 	flush();
+}
+
+void write_tty(void *ptr, int type) {
+	if (type == TYPE_HEX) {
+		// assume sizeof(TYPE_HEX) == 4
+		unsigned char digits[8];
+		unsigned long hex = *(unsigned long *)(ptr);
+		unsigned char dig;
+		for (int i = 0; i < 8; i++) {
+			dig = (unsigned char)(hex % 16); 
+			if (dig < 10) dig += 48;
+			else dig += 55;
+			digits[i] = dig;
+			hex = hex / 16;
+		}
+		print_to_tty('0');
+		print_to_tty('x');
+		for (int i = 7; i >= 0; i--) {
+			print_to_tty(digits[i]);
+		}
+		flush();
+	} 
 }
 
 void clear() {
@@ -73,10 +90,10 @@ void print_to_tty(unsigned char c) {
 }
 
 void scroll_up() {
-	for (int i = 0; i < TTY_SIZE - TTY_COL_SIZE; i++) {
+	for (unsigned short i = 0; i < TTY_SIZE - TTY_COL_SIZE; i++) {
 		buf[i] = buf[i+TTY_COL_SIZE];
 	}
-	for (int i = TTY_SIZE - TTY_COL_SIZE; i < TTY_SIZE; i++) {
+	for (unsigned short i = TTY_SIZE - TTY_COL_SIZE; i < TTY_SIZE; i++) {
 		buf[i] = ' ';
 	}
 	pos = TTY_SIZE - TTY_COL_SIZE;

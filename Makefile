@@ -6,7 +6,7 @@ CC = gcc
 LD = ld
 OBJCOPY = objcopy
 OBJDUMP = objdump
-CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer
+CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector
 LDFLAGS = -m elf_i386
 
 ########################

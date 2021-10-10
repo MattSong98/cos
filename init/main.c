@@ -5,6 +5,7 @@
 
 void init_tty(void);
 void print_hello(void);
+void write_tty(void *, int);
 void _println(void);
 void _printtb(void);
 void _print_reg(unsigned);
@@ -16,8 +17,8 @@ int
 main(void) {
 	
     init_tty();
-	for (int i = 0; i < 1000; i++)
-		print_hello();
+	unsigned long a = 0x12345678;
+	write_tty(&a, 6);
 	while(1);	
 
 	_print_reg(sizeof(int));
