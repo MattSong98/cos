@@ -127,6 +127,15 @@ f_spt:
 	mov eax, ds:[0x3000]
 	call print_reg
 	call println
+	mov eax, ds:[0xa000]
+	call print_reg
+	call println
+	mov eax, ds:[0xc000]
+	call print_reg
+	call println
+	mov eax, ds:[0x10000]
+	call print_reg
+	call println
 	jmp $
 	call main
 
