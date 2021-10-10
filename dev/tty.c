@@ -21,21 +21,34 @@
 extern void 
 _copy_to_cga (unsigned char c, unsigned char atr, unsigned short pos);
 
-static unsigned short row = 0;
-static unsigned short col = 0;
+// static unsigned short row = 0;
+// static unsigned short col = 0;
 
 static char buf[TTY_SIZE];
 static char atr[TTY_SIZE];
 
-void test() {
-	_copy_to_cga('A', STD_ATR, POS(0, 0));
-}
-
 // static void print_to_tty(char);
 // static void scroll_up();
-// static void flush();
+static void flush();
 
+extern void init_tty();
 // extern void print(void *ptr, int type);
 // extern void println(void *ptr, int type);
 // extern void printtb(void *ptr, int type);
 // extern void clear();
+
+void init_tty() {
+	for (unsigned short i = 0; i < TTY_SIZE; i++) {
+		buf[i] = ' ';
+		atr[i] = STD_ATR;
+	}
+	flush();
+}
+
+void flush() {
+	for (unsigned short i = 0; i < TTY_SIZE; i++) {
+		_copy_to_cga(buf[i], atr[i], i<<2);
+	}
+}
+
+

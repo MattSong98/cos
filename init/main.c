@@ -3,6 +3,7 @@
 
 #include "mm.h"
 
+void init_tty(void);
 void _println(void);
 void _printtb(void);
 void _print_reg(unsigned);
@@ -14,6 +15,7 @@ int
 main(void) {
 	
 	_copy_to_cga('A', 0xb, 0); 
+	init_tty();
 	while(1);	
 
 	_print_reg(sizeof(int));
