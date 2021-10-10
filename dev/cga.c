@@ -40,6 +40,7 @@ void write_cga(void *ptr, int type) {
 
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
+		hello();
 		uchar digits[8];
 		uint hex = *(uint *)(ptr);
 		uchar dig;
