@@ -14,7 +14,7 @@ void _copy_to_cga(unsigned char, unsigned char, unsigned short);
 int
 main(void) {
 	
-	_copy_to_cga('A', 0xb, 2000); 
+	_copy_to_cga('A', 0xb, 1999); 
 // 	init_tty();
 	while(1);	
 
