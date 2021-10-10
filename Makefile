@@ -13,6 +13,13 @@ LDFLAGS = -m elf_i386
 ##### MAKE PROCESS #####
 ########################
 
+a.img: boot kernel
+	dd if=boot of=a.img bs=512 count=1
+	dd if=kernel of=a.img bs=512 seek=1
+
+boot: boot.asm
+	nasm boot.asm -o boot
+
 kernel: kernel.out
 	$(OBJCOPY) -O binary -j .text kernel.out kernel
 
@@ -26,4 +33,7 @@ main.o: main.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -I. -c main.c
 
 clean: 
-	rm kernel.out head.o main.o
+	rm boot kernel kernel.out head.o main.o main.d
+
+run: 
+	bochs -q -f bochsrc

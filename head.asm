@@ -19,6 +19,8 @@ init:
     call load_idt
     call flush_sreg
     call clear_screen
+	mov eax, 0x10101010
+	call print_reg
     jmp $ 
 
 load_gdt:
