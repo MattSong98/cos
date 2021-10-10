@@ -12,7 +12,7 @@ main(void) {
 
 	init_memory();
     init_cga();
-	write_cga_test('0', 80);
+	write_cga_test('0', 1999);
 
 	while(1);
 	return 0;
