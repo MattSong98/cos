@@ -18,6 +18,7 @@ main(void) {
 	
     init_tty();
 	unsigned long a = 0x12345678;
+	print_hello();
 	write_tty(&a, 6);
 	while(1);	
 

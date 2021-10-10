@@ -43,6 +43,7 @@ void print_hello() {
 	print_to_tty('l');
 	print_to_tty('l');
 	print_to_tty('o');
+	print_to_tty('\n');
 	flush();
 }
 
