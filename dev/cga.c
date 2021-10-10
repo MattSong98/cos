@@ -14,7 +14,7 @@ static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
 
-static void update_cursor(ushort);
+// static void update_cursor(ushort);
 static void write_char_to_buf(uchar);
 static void scroll_up();
 static void flush();
@@ -69,7 +69,7 @@ void flush() {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		_copy_to_cga(buf[i], atr[i], i);
 	}
-	update_cursor(pos);
+//	update_cursor(pos);
 }
 
 void write_char_to_buf(uchar c) {
