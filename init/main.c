@@ -16,7 +16,8 @@ int
 main(void) {
 	
     init_tty();
-	print_hello();
+	for (int i = 0; i < 1000; i++)
+		print_hello();
 	while(1);	
 
 	_print_reg(sizeof(int));
