@@ -5,16 +5,14 @@
 #include "mm.h"
 #include "cga.h"
 
+extern void init_ps2_ctlr();
 
 int
 main(void) {
 
 	init_memory();
     init_cga();
-	char hello[] = "hello";
-	char c = 'A';
-	write_cga(hello, TYPE_STR);
-	write_cga(&c, TYPE_CHAR);
+	init_ps2_ctlr();
 	
 	while(1);
 	return 0;

@@ -23,8 +23,8 @@ target/boot: boot/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/head.o target/main.o target/memory.o target/cga.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/cga.o
+target/kernel.out: target/head.o target/main.o target/memory.o target/cga.o target/keyboard.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/cga.o target/keyboard.o
 
 target/head.o: boot/head.asm
 	nasm -f elf32 boot/head.asm -o target/head.o
@@ -37,6 +37,9 @@ target/memory.o: mm/memory.c
 
 target/cga.o: dev/cga.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/cga.c -o target/cga.o
+
+target/keyboard.o: dev/keyboard.c
+	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/keyboard.c -o target/keyboard.o
 
 ########################
 ###### ULTILITIES ######

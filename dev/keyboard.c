@@ -3,7 +3,7 @@
 #include "cga.h"
 
 
-static init_ps2_ctlr() {
+void init_ps2_ctlr() {
 	
 	// initialize USB Controller: Skip Over
 		
@@ -15,13 +15,15 @@ static init_ps2_ctlr() {
 
 	// Flush the Output Buffer
 		do {
-			uchar status = inb(0x64)
+			uchar status = inb(0x64);
 			status = status & 0x01;
 			if (status == 1) {
 				uchar data = inb(0x60);
-				
+				uint hex = (uint) data;
+				write_cga(&data, TYPE_CHAR);
+				write_cga(&hex, TYPE_HEX);
 			}
-		} while ();
+		} while (1);
 
 	// Set the Controller Configuration Byte
 
