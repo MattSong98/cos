@@ -50,6 +50,7 @@ void write_cga(void *ptr, int type) {
 			digits[i] = dig;
 			hex = hex / 16;
 		}
+		hello();
 		write_char_to_buf('0');
 		write_char_to_buf('x');
 		for (uchar i = 7; i >= 0; i--) {
