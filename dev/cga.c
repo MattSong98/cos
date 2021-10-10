@@ -41,7 +41,8 @@ void write_cga(void *ptr, int type) {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
 		uchar digits[8];
-		uint hex = *(unsigned int *)(ptr);
+		// uint hex = *(unsigned int *)(ptr);
+		uint hex = 0x12344321;
 		uchar dig;
 		for (uchar i = 0; i < 8; i++) {
 			dig = (uchar)(hex % 16); 
