@@ -2,9 +2,7 @@
 // from now on, we stay with C.
 
 #include "mm.h"
-
-void init_cga(void);
-void write_cga(void *, int);
+#include "cga.h"
 
 // entry point here
 

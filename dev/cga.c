@@ -1,10 +1,9 @@
+#include "cga.h"
+
 #define CGA_SIZE 80*25
 #define CGA_ROW_SIZE 25
 #define CGA_COL_SIZE 80
 #define CGA_STD_ATR 0x07
-
-#define TYPE_HEX 0
-#define TYPE_STR 1
 
 extern void 
 _copy_to_cga (unsigned char c, unsigned char atr, unsigned short pos);
@@ -16,10 +15,6 @@ static unsigned short pos;
 static void write_char_to_buf(unsigned char);
 static void scroll_up();
 static void flush();
-
-extern void init_cga();
-extern void write_cga(void *ptr, int type);
-extern void clear();
 
 void init_cga() {
 	for (unsigned short i = 0; i < CGA_SIZE; i++) {
@@ -52,7 +47,7 @@ void write_cga(void *ptr, int type) {
 	} 
 }
 
-void clear() {
+void clear_cga() {
 	pos = 0;
 	for (unsigned short i = 0; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
