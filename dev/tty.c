@@ -47,7 +47,7 @@ void init_tty() {
 
 void flush() {
 	for (unsigned short i = 0; i < TTY_SIZE; i++) {
-		_copy_to_cga(buf[i], atr[i], i<<2);
+		_copy_to_cga(buf[i], atr[i], i);
 	}
 }
 
