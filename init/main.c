@@ -10,6 +10,8 @@ main(void) {
 
 	init_memory();
     init_cga();
+	uint a = 0x12345678;
+	write_cga(&a, 0);
 
 	while(1);
 	return 0;

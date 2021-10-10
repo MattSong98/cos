@@ -25,7 +25,6 @@ void init_cga() {
 		atr[i] = CGA_STD_ATR;
 	}
 	flush();
-	update_cursor(pos);
 }
 
 void write_cga(void *ptr, int type) {
@@ -70,6 +69,7 @@ void flush() {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		_copy_to_cga(buf[i], atr[i], i);
 	}
+	update_cursor(pos);
 }
 
 void write_char_to_buf(uchar c) {
