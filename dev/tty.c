@@ -39,7 +39,7 @@ extern void init_tty();
 
 void init_tty() {
 	for (unsigned short i = 0; i < TTY_SIZE; i++) {
-		buf[i] = ' ';
+		buf[i] = 'A';
 		atr[i] = STD_ATR;
 	}
 	flush();
