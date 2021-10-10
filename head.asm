@@ -115,7 +115,7 @@ f_spt:
 	mov eax, ds:[40]
 	call print_reg
 	call println
-	mov eax, ds:[0xb010]
+	mov eax, ds:[0xb040]
 	call print_reg
 	call println
 	mov eax, ds:[0x1000]
