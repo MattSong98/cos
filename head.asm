@@ -112,10 +112,10 @@ f_spt:
 	or eax, 0x80000000
 	mov cr0, eax
 
-	mov eax, ds:[0x0000]
+	mov eax, ds:[40]
 	call print_reg
 	call println
-	mov eax, ds:[0x0001]
+	mov eax, ds:[0xb010]
 	call print_reg
 	call println
 	mov eax, ds:[0x1000]
