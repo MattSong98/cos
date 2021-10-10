@@ -52,8 +52,8 @@ void write_cga(void *ptr, int type) {
 
 	if (type == TYPE_STR) {
 		uchar *pchar = (uchar *)ptr;
-		while (*(pchar++) != '\0') {
-			write_char_to_buf(*pchar);
+		while (*pchar != '\0') {
+			write_char_to_buf(*(pchar++));
 		}
 		flush();
 		return;
