@@ -11,7 +11,7 @@ void init_ps2_ctlr() {
 
 	// Disable devices: 
 		//outb(0x64, 0xAD);
-		//outb(0x64, 0xA7);
+		outb(0x64, 0xA7);
 
 	// Flush the Output Buffer
 		do {
