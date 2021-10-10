@@ -11,6 +11,9 @@ void _print_reg(unsigned);
 
 int
 main(void) {
+	
+	_print_reg(sizeof(int));
+	_println();
 
 	init_memory();
 
