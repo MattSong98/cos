@@ -1,1 +1,1 @@
-target/main.o: init/main.c
+target/main.o: init/main.c include/mm.h

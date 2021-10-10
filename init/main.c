@@ -1,8 +1,9 @@
 // main called by head.s
 // from now on, we stay with C.
 
+#include "mm.h"
+
 int num_data = 7;
-int num_bss;
 
 void _println(void);
 void _printtb(void);
@@ -14,10 +15,7 @@ unsigned int fact(unsigned);
 
 int
 main(void) {
-	unsigned a = 10;
-	_print_reg(a);
-	_println();
-	_print_reg(fact(a));
+	_print_reg(PAGE_SIZE);
 	_println();
 	_print_reg(num_data);
 	while (1);

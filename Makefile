@@ -21,16 +21,19 @@ target/boot: boot/boot.asm
 	nasm boot/boot.asm -o target/boot
 
 target/kernel: target/kernel.out
-	$(OBJCOPY) -O binary -j .text -j .data -j .bss target/kernel.out target/kernel
+	$(OBJCOPY) -O binary -j .text -j .data -j .bss --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/head.o target/main.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o
+target/kernel.out: target/head.o target/main.o target/memory.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o
 
 target/head.o: boot/head.asm
 	nasm -f elf32 boot/head.asm -o target/head.o
 
 target/main.o: init/main.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -I. -c init/main.c -o target/main.o
+	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c init/main.c -o target/main.o
+
+target/memory.o: mm/memory.c
+	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c mm/memory.c -o target/memory.o
 
 ########################
 ###### ULTILITIES ######

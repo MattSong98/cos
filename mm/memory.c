@@ -6,6 +6,8 @@
 // for frames of user space processes.
 // We assume there is at least 64M space available.
 
+#include "mm.h"
+
 #define LOW_MEM 1024*1024
 #define PAGING_MEM 63*1024*1024
 #define PAGING_PAGES (PAGING_MEM>>12)
@@ -29,7 +31,7 @@ get_free_page() {
 	for (int i = RESERVED_PAGES; i < PAGING_PAGES; i++) {
 		if (mm_map[i] != USED) {     // get free page successfully
 			mm_map[i] = USED;
-			return LOW_MEM + i>>12;
+			return LOW_MEM + (i>>12);
 		}
 	}
 	return 0;
@@ -41,7 +43,7 @@ get_free_page() {
 
 int 
 free_page(unsigned long pa) {
-	if (pa % 4096 == 0 && pa >= LOW_MEM) {
+	if (pa % PAGE_SIZE == 0 && pa >= LOW_MEM) {
 		mm_map[(pa-LOW_MEM) >> 12] = 0;
 		return 0;
 	}
