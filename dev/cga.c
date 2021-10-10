@@ -19,12 +19,6 @@ static void write_char_to_buf(uchar);
 static void scroll_up();
 static void flush();
 
-void write_cga_test(uchar c, uint len) {
-	for (uint i = 0; i < len; i++)
-		write_char_to_buf(c);
-	flush();
-}
-
 void init_cga() {
 	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
@@ -38,7 +32,7 @@ void write_cga(void *ptr, int type) {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
 		uchar digits[8];
-		uint hex = *(unsigned int *)(ptr);
+		uint hex = *(uint *)(ptr);
 		uchar dig;
 		for (uchar i = 0; i < 8; i++) {
 			dig = (uchar)(hex % 16); 
@@ -53,7 +47,17 @@ void write_cga(void *ptr, int type) {
 			write_char_to_buf(digits[7-i]);
 		}
 		flush();
+		return;
 	} 
+
+	if (type == TYPE_STR) {
+		uchar *pchar = (uchar *)ptr;
+		while (*(pchar++) != '\0') {
+			write_char_to_buf(*pchar);
+		}
+		flush();
+		return;
+	}
 }
 
 void clear_cga() {

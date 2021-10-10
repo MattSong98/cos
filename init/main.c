@@ -4,7 +4,6 @@
 #include "types.h"
 #include "mm.h"
 #include "cga.h"
-extern void write_cga_test();
 
 
 int
@@ -12,7 +11,8 @@ main(void) {
 
 	init_memory();
     init_cga();
-	write_cga_test('0', 2000);
+	char hello[] = "hello";
+	write_cga(hello, TYPE_STR);
 
 	while(1);
 	return 0;
