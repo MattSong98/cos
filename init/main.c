@@ -1,6 +1,7 @@
 // main called by head.s
 // from now on, we stay with C.
 
+#include "types.h"
 #include "mm.h"
 #include "cga.h"
 

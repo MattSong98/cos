@@ -1,1 +1,2 @@
-target/main.o: init/main.c include/mm.h include/cga.h
+target/main.o: init/main.c include/types.h include/mm.h include/types.h \
+ include/cga.h
