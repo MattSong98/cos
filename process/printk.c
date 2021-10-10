@@ -11,7 +11,31 @@
 #define TYPE_STR 7
 #define TYPE_CHAR 8
 
-void print(void *ptr, int type) {
+#define TTY_SIZE 80*25
+#define TTY_ROW_SIZE 25
+#define TTY_COL_SIZE 80
+#define POS(row, col) row*TTY_COL_SIZE+col
 
+#define STD_ATR 0b00001011
 
+extern void 
+_copy_to_cga (unsigned char c, unsigned char atr, unsigned short pos);
+
+static unsigned short row = 0;
+static unsigned short col = 0;
+
+static char buf[TTY_SIZE];
+static char atr[TTY_SIZE];
+
+void test() {
+	_copy_to_cga('A', STD_ATR, POS(0, 0));
 }
+
+// static void print_to_tty(char);
+// static void scroll_up();
+// static void flush();
+
+// extern void print(void *ptr, int type);
+// extern void println(void *ptr, int type);
+// extern void printtb(void *ptr, int type);
+// extern void clear();

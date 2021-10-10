@@ -6,12 +6,16 @@
 void _println(void);
 void _printtb(void);
 void _print_reg(unsigned);
+void _copy_to_cga(unsigned char, unsigned char, unsigned short);
 
 // entry point here
 
 int
 main(void) {
 	
+	_copy_to_cga('A', 0xb, 0); 
+	while(1);	
+
 	_print_reg(sizeof(int));
 	_println();
 

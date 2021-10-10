@@ -9,7 +9,7 @@ SCRN_SEL equ 0x0018
 ;##############################################################################
 
 segment .text
-	global init, _println, _printtb, _print_reg
+	global init, _println, _printtb, _print_reg, _copy_to_cga
 	extern main
 
 page_dir:
@@ -172,6 +172,23 @@ align 4
 
 tty_pos:
     dw 0
+
+_copy_to_cga:
+	push ebp
+	push esi
+	mov ebp, esp
+	mov ax, SCRN_SEL
+	mov gs, ax
+	mov ax, [ebp+12]
+	shl ax, 8
+	mov byte al, [ebp+8]
+	mov esi, [ebp+16]
+	shl esi, 1
+	mov word gs:[esi], ax
+	mov esp, ebp
+	pop esi
+	pop ebp
+	ret
 
 _println:
 	call println
