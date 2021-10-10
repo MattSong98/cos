@@ -106,42 +106,21 @@ f_spt:
 	cmp ecx, 0x4000
 	jl f_spt
 
+to_entry:
 	xor eax, eax
 	mov cr3, eax
 	mov eax, cr0
 	or eax, 0x80000000
 	mov cr0, eax
-
-	mov eax, ds:[60]
-	call print_reg
-	call println
-	mov eax, ds:[0x109e0]
-	call print_reg
-	call println
-	mov eax, ds:[0x1000]
-	call print_reg
-	call println
-	mov eax, ds:[0x2000]
-	call print_reg
-	call println
-	mov eax, ds:[0x3000]
-	call print_reg
-	call println
-	mov eax, ds:[0xa000]
-	call print_reg
-	call println
-	mov eax, ds:[0xc000]
-	call print_reg
-	call println
-	mov eax, ds:[0x10000]
-	call print_reg
-	call println
-	jmp $
 	call main
+spin:
+	jmp spin
 
 ;##############################################################################
 ;################################ INTERRUPT ###################################
 ;##############################################################################
+
+align 4
 
 interrupt_ignore:
     iret
@@ -155,6 +134,8 @@ time_interrupt:
 ;##############################################################################
 ;############################### INIT STACK ###################################
 ;##############################################################################
+
+align 4
 
     times 1024 db 0
 init_stack:
@@ -171,6 +152,8 @@ gdt_48:
     dw 256*8-1
     dd gdt
 
+align 8
+
 idt:
     times 256 dd 0, 0
 
@@ -184,6 +167,8 @@ gdt:
 ;##############################################################################
 ;################################# PRINT ######################################
 ;##############################################################################
+
+align 4
 
 tty_pos:
     dw 0

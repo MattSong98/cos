@@ -21,7 +21,7 @@ boot: boot.asm
 	nasm boot.asm -o boot
 
 kernel: kernel.out
-	$(OBJCOPY) -O binary -j .text kernel.out kernel
+	$(OBJCOPY) -O binary -j .text -j .data -j .bss kernel.out kernel
 
 kernel.out: head.o main.o
 	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o kernel.out head.o main.o
