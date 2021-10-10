@@ -41,8 +41,7 @@ void write_cga(void *ptr, int type) {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
 		uchar digits[8];
-		// uint hex = *(unsigned int *)(ptr);
-		uint hex = 0x12344321;
+		uint hex = *(unsigned int *)(ptr);
 		uchar dig;
 		for (uchar i = 0; i < 8; i++) {
 			dig = (uchar)(hex % 16); 
@@ -51,11 +50,10 @@ void write_cga(void *ptr, int type) {
 			digits[i] = dig;
 			hex = hex / 16;
 		}
-		hello();
 		write_char_to_buf('0');
 		write_char_to_buf('x');
-		for (uchar i = 7; i >= 0; i--) {
-			write_char_to_buf(digits[i]);
+		for (uchar i = 0; i < 8; i++) {
+			write_char_to_buf(digits[7-i]);
 		}
 		flush();
 	} 
