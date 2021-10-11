@@ -34,6 +34,13 @@ void init_ps2_ctlr() {
 	uchar test_res = inb(0x60);
 	uint hex = (uint) test_res;
 	write_cga(&hex, TYPE_HEX);
+	
+	while ((inb(0x64) & 0x02) != 0);
+	outb(0x64, 0x20);
+	while ((inb(0x64) & 0x01) != 1);
+	ccb = inb(0x60);
+	hex = (uint) ccb;
+	write_cga(&hex, TYPE_HEX);
 
 	// Dertermine if there are two channels; Skip Over
 	// Perform Interface Tests
