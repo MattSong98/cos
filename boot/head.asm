@@ -22,7 +22,7 @@ init:
 		call load_idt
 		call flush_sreg
 		int 0x40
-		jmp setup_page_dir
+		; jmp setup_page_dir
 
 load_gdt:
 		lgdt ds:[gdt_48]
