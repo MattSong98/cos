@@ -1,43 +1,37 @@
+// Attension, most but not all of keys are mapped.
+// Unexpected results might produce due to unmapped keys.
+// To keep it simple, state of kbd is captured by variable 
+// "shift", which only have four valid values: NORMAL (0b0000), 
+// SHIFT (0b0001), CONTROL (0b0010) and SHIFT & CONTROL (0b0011).
+
+// Below shows valid mapped keys (which are capsuled by []), 
+// take the US Keymap in a normal mode for example :) 
+
+// [esc] f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 
+// [`] [1] [2] [3] [4] [5] [6] [7] [8] [9] [0] [-] [=] [/b]
+// [/t] [q] [w] [e] [r] [t] [y] [u] [i] [o] [p] [[] []] [\]
+// capslock [a] [s] [d] [f] [g] [h] [j] [k] [l] [;] ['] [\n]
+// [shift] [z] [x] [c] [v] [b] [n] [m] [,] [.] [/] [shift]
+// fn [ctl] alt command [ ] command alt 
+
+
 #include "kbd.h"
 #include "x86.h"
 #include "cga.h"
 #include "panic.h"
 #include "types.h"
 
-static void init_ps2_ctlr();
-
-void init_keyboard() {
-	init_ps2_ctlr();
-}
-
-void read_scan_code() {
-	while(1) {
-		while ((inb(0x64) & 0x01) != 1);
-		uchar data = inb(0x60);
-		uint hex = (uint) data;
-		write_cga(&hex, TYPE_HEX);
-	}
-}
-
 int kbdgetc(void) {
   	static uint shift;
   	static uchar *charcode[4] = {
     	normalmap, shiftmap, ctlmap, ctlmap
  	};
-  	uint st, data, c;
+  	uint data, c;
 
-  	st = inb(KBSTATP);
-  	if((st & KBS_DIB) == 0) return -1;
+  	if((inb(KBSTATP) & KBS_DIB) == 0) return -1;
   	data = inb(KBDATAP);
 
-	if(shift & E0ESC) {
-    	// Last character was an E0 escape; 
-    	shift &= ~E0ESC;
-		return 0;
-	} else if(data == 0xE0) {
-    	shift |= E0ESC;
-    	return 0;
-  	} else if(data & 0x80) {
+  	if(data & 0x80) {
     	// Key released
     	data = data & 0x7F;
     	shift &= ~(shiftcode[data]);
@@ -49,9 +43,7 @@ int kbdgetc(void) {
   	return c;
 }
 
-void init_ps2_ctlr() {
-	// initialize USB Controller: Skip Over
-	// Determine if the PS/2 Controller exists : Skip Over
+void init_kbd() {
 	// Disable both devices:
 	while ((inb(0x64) & 0x02) != 0);
 	outb(0x64, 0xAD);
@@ -78,7 +70,6 @@ void init_ps2_ctlr() {
 	while ((inb(0x64) & 0x01) != 1);
 	if (inb(0x60) != 0x55) panic();
 	
-	// Dertermine if there are two channels: Skip Over
 	// Perform Interface Tests (only for the first port)
 	while ((inb(0x64) & 0x02) != 0);
 	outb(0x64, 0xAB);
@@ -88,8 +79,6 @@ void init_ps2_ctlr() {
 	// Enable Device (only for the first port)
 	while ((inb(0x64) & 0x02) != 0);
 	outb(0x64, 0xAE);
-
-	// Reset Devices: Skip Over
 }
 
 

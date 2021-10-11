@@ -7,7 +7,7 @@
 #include "panic.h"
 
 extern void read_scan_code();
-extern void init_keyboard();
+extern void init_kbd();
 extern int kbdgetc();
 
 int
@@ -15,7 +15,7 @@ main(void) {
 
 	init_memory();
     init_cga();
-	init_keyboard();
+	init_kbd();
 	while (1) {
 		int c_int = kbdgetc();
 		if (c_int > 0) {
