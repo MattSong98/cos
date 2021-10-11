@@ -13,7 +13,6 @@ main(void) {
 	init_memory();
     init_cga();
 	init_keyboard();
-	panic();
 	
 	while(1);
 	return 0;
