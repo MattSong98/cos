@@ -2,6 +2,9 @@
 # Configuration file for Bochs
 ###############################################################
 
+# cpu capicity
+cpu: count=2, ips=10000000
+
 # how much memory the emulated machine will have
 megs: 128 
 
