@@ -7,12 +7,15 @@
 #include "keyboard.h"
 #include "panic.h"
 
+extern void read_scan_code();
+
 int
 main(void) {
 
 	init_memory();
     init_cga();
 	init_keyboard();
+	read_scan_code();
 	
 	while(1);
 	return 0;

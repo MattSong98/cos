@@ -9,6 +9,15 @@ void init_keyboard() {
 	init_ps2_ctlr();
 }
 
+void read_scan_code() {
+	while(1) {
+		while ((inb(0x64) & 0x01) != 1);
+		uchar data = inb(0x60);
+		uint hex = (uint) data;
+		write_cga(&hex, TYPE_HEX);
+	}
+}
+
 void init_ps2_ctlr() {
 	// initialize USB Controller: Skip Over
 	// Determine if the PS/2 Controller exists : Skip Over
