@@ -23,6 +23,7 @@ init:
 		call flush_sreg
 		sti
 		int 0x40
+		jmp $
 		jmp setup_page_dir
 
 load_gdt:
