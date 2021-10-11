@@ -21,8 +21,9 @@ init:
 		call load_gdt
 		call load_idt
 		call flush_sreg
-		int 0x40
-		; jmp setup_page_dir
+		sti
+		jmp $
+		jmp setup_page_dir
 
 load_gdt:
 		lgdt ds:[gdt_48]
@@ -124,7 +125,6 @@ spin:
 align 4
 
 interrupt_ignore:
-		jmp $
 		push ebp
 		mov ebp, esp
 		push dword 0x12
