@@ -127,10 +127,11 @@ align 4
 interrupt_ignore:
 		push ebp
 		mov ebp, esp
-		push dword 0x12
-		push dword 0xb
 		push dword 0
+		push dword 0xb
+		push dword eax
 		call _copy_to_cga
+		inc eax
 		leave
 		iret
 
