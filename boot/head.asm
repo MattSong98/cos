@@ -31,8 +31,9 @@ load_gdt:
 load_idt:
 		mov eax, CODE_SEL                       ;; prepare descriptor
 		shl eax, 16
-		mov ax, interrupt_ignore                 
-		mov ebx, 0x8e00
+		mov ax, interrupt_ignore
+		mov ebx, interrupt_ignore		                 
+		mov bx, 0x8e00
 		mov ecx, 256                            ;; copy to idt  
 		mov esi, idt
 f_li:
