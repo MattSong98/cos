@@ -1,2 +1,2 @@
-target/panic.o: kernel/panic.c include/panic.h include/cga.h \
+target/panic.o: kernel/panic.c include/defs.h include/types.h \
  include/types.h

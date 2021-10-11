@@ -1,5 +1,5 @@
 #include "types.h"
-#include "cga.h"
+#include "defs.h"
 #include "x86.h"
 
 #define CGA_SIZE 80*25

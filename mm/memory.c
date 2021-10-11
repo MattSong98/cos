@@ -6,7 +6,7 @@
 // for frames of user space processes.
 // We assume there is at least 64M space available.
 
-#include "mm.h"
+#include "defs.h"
 #include "types.h"
 
 #define LOW_MEM 1024*1024
@@ -14,6 +14,7 @@
 #define PAGING_PAGES (PAGING_MEM>>12)
 #define RESERVED_MEM 15*1024*1024
 #define RESERVED_PAGES (RESERVED_MEM>>12)
+#define PAGE_SIZE 4096
 #define USED 100
 
 uchar mm_map[PAGING_PAGES];

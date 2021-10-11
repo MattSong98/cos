@@ -1,5 +1,4 @@
-#include "panic.h"
-#include "cga.h"
+#include "defs.h"
 #include "types.h"
 
 void panic() {

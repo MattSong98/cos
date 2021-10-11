@@ -2,15 +2,9 @@
 // from now on, we stay with C.
 
 #include "types.h"
-#include "mm.h"
-#include "cga.h"
-#include "panic.h"
+#include "defs.h"
 
-extern void read_scan_code();
-extern void init_kbd();
-extern int kbdgetc();
-
-int
+int 
 main(void) {
 
 	init_memory();
@@ -26,4 +20,4 @@ main(void) {
 	
 	while(1);
 	return 0;
-}
+}   
