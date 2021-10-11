@@ -4,10 +4,11 @@
 #include "types.h"
 #include "mm.h"
 #include "cga.h"
-#include "keyboard.h"
 #include "panic.h"
 
 extern void read_scan_code();
+extern void init_keyboard();
+extern int kbdgetc();
 
 int
 main(void) {
@@ -15,7 +16,13 @@ main(void) {
 	init_memory();
     init_cga();
 	init_keyboard();
-	read_scan_code();
+	while (1) {
+		int c_int = kbdgetc();
+		if (c_int > 0) {
+			uchar c = (uchar) c_int;
+			write_cga(&c, TYPE_CHAR);
+		}
+	} 
 	
 	while(1);
 	return 0;

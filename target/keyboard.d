@@ -1,2 +1,2 @@
-target/keyboard.o: dev/keyboard.c include/keyboard.h include/x86.h \
- include/types.h include/cga.h include/panic.h
+target/keyboard.o: dev/keyboard.c include/kbd.h include/types.h \
+ include/x86.h include/cga.h include/panic.h include/types.h
