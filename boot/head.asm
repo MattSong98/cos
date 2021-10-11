@@ -123,6 +123,7 @@ spin:
 align 4
 
 interrupt_ignore:
+		jmp $
 		push ebp
 		mov ebp, esp
 		push dword 0x12
