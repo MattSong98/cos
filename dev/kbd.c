@@ -15,9 +15,9 @@
 // fn [ctl] alt command [ ] command alt 
 
 
+#include "types.h"
 #include "kbd.h"
 #include "x86.h"
-#include "types.h"
 #include "defs.h"
 
 int 

@@ -1,25 +1,53 @@
 #include "types.h"
 #include "defs.h"
 #include "x86.h"
-
-#define CGA_SIZE 80*25
-#define CGA_ROW_SIZE 25
-#define CGA_COL_SIZE 80
-#define CGA_STD_ATR 0x07
-
-extern void 
-_copy_to_cga (uchar c, uchar atr, ushort pos);
+#include "console.h"
 
 static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
 
-static void update_cursor(ushort);
-static void write_char_to_buf(uchar);
-static void scroll_up();
-static void flush();
+static void 
+update_cursor(ushort pos) 
+{
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uchar) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uchar) ((pos >> 8) & 0xFF));
+}
 
-void init_cga() {
+static void 
+flush() 
+{
+	for (ushort i = 0; i < CGA_SIZE; i++) {
+		_copy_to_cga(buf[i], atr[i], i);
+	}
+	update_cursor(pos);
+}
+
+static void scroll_up() 
+{
+	for (ushort i = 0; i < CGA_SIZE - CGA_COL_SIZE; i++) {
+		buf[i] = buf[i+CGA_COL_SIZE];
+	}
+	for (ushort i = CGA_SIZE - CGA_COL_SIZE; i < CGA_SIZE; i++) {
+		buf[i] = ' ';
+	}
+	pos = CGA_SIZE - CGA_COL_SIZE - 1;
+}
+
+static void 
+write_char_to_buf(uchar c) 
+{
+	if (pos == CGA_SIZE - 1) {
+		scroll_up();
+	}
+	buf[pos++] = c;
+}
+
+void 
+init_cga() 
+{
 	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
@@ -28,7 +56,9 @@ void init_cga() {
 	flush();
 }
 
-void write_cga(void *ptr, int type) {
+void 
+write_cga(void *ptr, int type) 
+{
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
 		uchar digits[8];
@@ -67,42 +97,12 @@ void write_cga(void *ptr, int type) {
 	}
 }
 
-void clear_cga() {
+void 
+clear_cga() 
+{
 	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		buf[i] = ' ';
 	}
 	flush();
 }
-
-void update_cursor(ushort pos) {
-	outb(0x3D4, 0x0F);
-	outb(0x3D5, (uchar) (pos & 0xFF));
-	outb(0x3D4, 0x0E);
-	outb(0x3D5, (uchar) ((pos >> 8) & 0xFF));
-}
-
-void flush() {
-	for (ushort i = 0; i < CGA_SIZE; i++) {
-		_copy_to_cga(buf[i], atr[i], i);
-	}
-	update_cursor(pos);
-}
-
-void write_char_to_buf(uchar c) {
-	if (pos == CGA_SIZE - 1) {
-		scroll_up();
-	}
-	buf[pos++] = c;
-}
-
-void scroll_up() {
-	for (ushort i = 0; i < CGA_SIZE - CGA_COL_SIZE; i++) {
-		buf[i] = buf[i+CGA_COL_SIZE];
-	}
-	for (ushort i = CGA_SIZE - CGA_COL_SIZE; i < CGA_SIZE; i++) {
-		buf[i] = ' ';
-	}
-	pos = CGA_SIZE - CGA_COL_SIZE - 1;
-}
-

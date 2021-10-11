@@ -1,16 +1,16 @@
 // !! Not added yet
 
-#include "tty.h"
 #include "types.h"
+#include "tty.h"
 
 #define MAX_BUF_SIZE 64
 
 // access by upper layor process through syscall
-extern int tty_read(char *buf, int count);
-extern int tty_write(char *buf, int count);
+extern int tty_read(uchar *buf, int count);
+extern int tty_write(uchar *buf, int count);
 
 struct buffer_q {
-	char queue[MAX_BUF_SIZE];
+	uchar queue[MAX_BUF_SIZE];
 	uchar r_ptr;
 	uchar w_ptr;
 }

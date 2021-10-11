@@ -6,8 +6,8 @@
 // for frames of user space processes.
 // We assume there is at least 64M space available.
 
-#include "defs.h"
 #include "types.h"
+#include "defs.h"
 
 #define LOW_MEM 1024*1024
 #define PAGING_MEM 63*1024*1024

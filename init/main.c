@@ -2,6 +2,7 @@
 // from now on, we stay with C.
 
 #include "types.h"
+#include "console.h"
 #include "defs.h"
 
 int 

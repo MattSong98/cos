@@ -1,2 +1,1 @@
-target/memory.o: mm/memory.c include/defs.h include/types.h \
- include/types.h
+target/memory.o: mm/memory.c include/types.h include/defs.h

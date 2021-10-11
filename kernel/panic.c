@@ -1,5 +1,6 @@
-#include "defs.h"
 #include "types.h"
+#include "console.h"
+#include "defs.h"
 
 void panic() {
 	uchar mesg[] = "Kernel Panic!";

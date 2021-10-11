@@ -1,7 +1,5 @@
 // PC keyboard interface constants
 
-#include "types.h"
-
 #define NO              0
 #define SHIFT           (1<<0)
 #define CTL             (1<<1)
