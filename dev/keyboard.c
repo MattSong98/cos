@@ -28,8 +28,8 @@ int kbdgetc(void) {
  	};
   	uint data, c;
 
-  	if((inb(KBSTATP) & KBS_DIB) == 0) return -1;
-  	data = inb(KBDATAP);
+  	if((inb(0x64) & 0x01) == 0) return -1;
+  	data = inb(0x60);
 
   	if(data & 0x80) {
     	// Key released

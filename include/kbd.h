@@ -2,17 +2,10 @@
 
 #include "types.h"
 
-#define KBSTATP         0x64    // kbd controller status port(I)
-#define KBS_DIB         0x01    // kbd data in buffer
-#define KBDATAP         0x60    // kbd data port(I)
-
 #define NO              0
 
 #define SHIFT           (1<<0)
 #define CTL             (1<<1)
-#define ALT             (1<<2)
-
-#define E0ESC           (1<<6)
 
 // C('A') == Control-A
 #define C(x) (x - '@')
@@ -21,8 +14,7 @@ static uchar shiftcode[256] =
 {
   [0x1D] CTL,
   [0x2A] SHIFT,
-  [0x36] SHIFT,
-  [0x38] ALT,
+  [0x36] SHIFT
 };
 
 static uchar normalmap[256] =
