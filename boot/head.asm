@@ -21,7 +21,7 @@ init:
 		call load_gdt
 		call load_idt
 		call flush_sreg
-		jmp $
+		int 0x40
 		jmp setup_page_dir
 
 load_gdt:
