@@ -10,7 +10,7 @@ SCRN_SEL equ 0x0018
 
 segment .text
 		global init, _copy_to_cga
-		extern main, pic_send_eoi
+		extern main, kbdgetc
 
 page_dir:
 init:
@@ -131,6 +131,7 @@ interrupt_ignore:
 		call _copy_to_cga
 		add esp, 12
 		inc ecx
+		in al, 0x60
 		mov al, 0x20
 		out 0x20, al
 		leave
