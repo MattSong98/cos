@@ -19,33 +19,11 @@
 #include "kbd.h"
 #include "x86.h"
 #include "defs.h"
+#include "pic.h"
 
-int 
-kbdgetc(void) 
-{
-  	static uint shift;
-  	static uchar *charcode[4] = {
-    	normalmap, shiftmap, ctlmap, ctlmap
- 	};
-  	uint data, c;
 
-  	if((inb(0x64) & 0x01) == 0) return -1;
-  	data = inb(0x60);
-
-  	if(data & 0x80) {
-    	// Key released
-    	data = data & 0x7F;
-    	shift &= ~(shiftcode[data]);
-    	return 0;
-	}
-
-  	shift |= shiftcode[data];
-  	c = charcode[shift & (CTL | SHIFT)][data];
-  	return c;
-}
-
-void 
-init_kbd() 
+static void 
+ps2_init() 
 {
 	// Disable both devices:
 	while ((inb(0x64) & 0x02) != 0);
@@ -84,4 +62,33 @@ init_kbd()
 	outb(0x64, 0xAE);
 }
 
+void 
+kbd_init(void) 
+{
+	ps2_init();	
+	pic_enable_irq(IRQ_KBD);
+}
 
+int 
+kbdgetc(void) 
+{
+	static uint shift;
+	static uchar *charcode[4] = {
+		normalmap, shiftmap, ctlmap, ctlmap
+	};
+	uint data, c;
+
+	if((inb(0x64) & 0x01) == 0) return -1;
+	data = inb(0x60);
+
+	if(data & 0x80) {
+		// Key released
+		data = data & 0x7F;
+		shift &= ~(shiftcode[data]);
+		return 0;
+	}
+
+	shift |= shiftcode[data];
+	c = charcode[shift & (CTL | SHIFT)][data];
+	return c;
+}

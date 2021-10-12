@@ -10,7 +10,7 @@ SCRN_SEL equ 0x0018
 
 segment .text
 		global init, _copy_to_cga
-		extern main, write_cga
+		extern main, pic_send_eoi
 
 page_dir:
 init:
@@ -21,8 +21,6 @@ init:
 		call load_gdt
 		call load_idt
 		call flush_sreg
-		sti
-		jmp $
 		jmp setup_page_dir
 
 load_gdt:
@@ -131,7 +129,11 @@ interrupt_ignore:
 		push dword 0xb
 		push dword eax
 		call _copy_to_cga
+		add esp, 12
 		inc eax
+		push dword 0x01
+		call pic_send_eoi
+		add esp, 4
 		leave
 		iret
 
