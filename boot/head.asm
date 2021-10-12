@@ -127,13 +127,13 @@ interrupt_ignore:
 		mov ebp, esp
 		push dword 0
 		push dword 0xb
-		push dword eax
+		push dword 65 
 		call _copy_to_cga
-		add esp, 12
-		inc eax
-		push dword 0x01
-		call pic_send_eoi
-		add esp, 4
+		;add esp, 12
+		;inc eax
+		;push dword 0x01
+		;call pic_send_eoi
+		;add esp, 4
 		leave
 		iret
 
