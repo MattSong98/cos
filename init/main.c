@@ -13,7 +13,7 @@ main(void) {
 	pic_init();
 	init_cga();
 	kbd_init();
-	sti();
+	// sti();
 	
 	while(1);
 	return 0;
