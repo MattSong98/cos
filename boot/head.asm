@@ -10,7 +10,7 @@ SCRN_SEL equ 0x0018
 
 segment .text
 		global init, _copy_to_cga
-		extern main, kbdgetc
+		extern main
 
 page_dir:
 init:

@@ -19,7 +19,7 @@ extern int kbdgetc(void);
 
 // mm.c
 
-extern void init_memory(void);
+extern void mm_init(void);
 extern uint get_free_page(void);
 extern int free_page(uint);
 

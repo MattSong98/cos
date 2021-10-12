@@ -16,9 +16,8 @@
 #define IRQ_TIMER			0
 #define IRQ_KBD				1
 #define IRQ_SLAVE			2
-#define IRQ_FLOPPY		6
-#define IRQ_SPU7			7
+#define IRQ_SPUR7			7
 #define IRQ_IDE				14
-#define IRQ_SPU15			15
+#define IRQ_SPUR15		15
 
 #endif

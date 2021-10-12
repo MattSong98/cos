@@ -9,7 +9,7 @@
 int 
 main(void) {
 
-	init_memory();
+	mm_init();
 	pic_init();
 	init_cga();
 	kbd_init();

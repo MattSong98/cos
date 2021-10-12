@@ -24,7 +24,8 @@ boot: floppy
 # disable the mouse
 mouse: enabled=0
 
-# enable key mapping, using US layout as default.
+# enable key mapping, using us layout as default.
 keyboard:keymap=/usr/local/share/bochs/keymaps/sdl2-pc-us.map
 
+# display library
 display_library: sdl2
