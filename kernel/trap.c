@@ -58,9 +58,9 @@ trap(struct trapframe *tf)
 			break;
 
 		case T_KBD:
-			/// uint no = tf->trapno;
-			// write_cga(&no, TYPE_HEX);
-			// while(1);
+			uint no = tf->trapno;
+			write_cga(&no, TYPE_HEX);
+			while(1);
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
