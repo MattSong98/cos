@@ -45,21 +45,21 @@ trap(struct trapframe *tf)
 	}
 	
 	switch (tf->trapno) {
-		case T_TIMER:
+		case 0x20:
 		{
 			break;
 		}
-		case T_KBD:
+		case 0x21:
 		{
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
 		}
-		case T_SPUR7:
+		case 0x27:
 			break;
-		case T_IDE:
+		case 0x2E:
 			break;
-		case T_SPUR15:
+		case 0x2F:
 			break;
 		default:
 			// unknown
