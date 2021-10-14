@@ -60,10 +60,8 @@ trap(struct trapframe *tf)
 			uint no = tf->trapno;
 			write_cga(&no, TYPE_HEX);
 			
-			kbd_intr();
-			while(1);
+			// kbd_intr();
 			pic_send_eoi(IRQ_KBD);
-			while(1);
 			break;
 			
 		case T_SPUR7:
