@@ -20,6 +20,7 @@
 #include "x86.h"
 #include "defs.h"
 #include "pic.h"
+#include "console.h"
 
 
 static void 
@@ -92,3 +93,15 @@ kbdgetc(void)
 	c = charcode[shift & (CTL | SHIFT)][data];
 	return c;
 }
+
+void 
+kbd_intr()
+{
+	int ret = kbdgetc();
+	if (ret > 0) {
+		uchar c = (uchar) ret;
+		write_cga(&c, TYPE_CHAR);
+	}
+}
+
+
