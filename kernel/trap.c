@@ -55,6 +55,8 @@ write_cga(&a, TYPE_HEX);
 			pic_send_eoi(IRQ_KBD);
 			break;
 		}
+		case 0x11:
+			break;
 		case 0x2E:
 			break;
 		case 0x2F:
