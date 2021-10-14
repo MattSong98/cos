@@ -27,7 +27,7 @@ static struct gate_desc idt[IDT_SIZE];
 void 
 idt_init()
 {
-	for (uchar i = 0; i < IDT_SIZE; i++) {
+	for (ushort i = 0; i < IDT_SIZE; i++) {
 		SET_GATE(idt[i], vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
 	SET_GATE(idt[T_SYSCALL], vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
