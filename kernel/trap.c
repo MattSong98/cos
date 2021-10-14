@@ -52,7 +52,6 @@ trap(struct trapframe *tf)
 			write_cga(&no, TYPE_HEX);
 			uint nkbd = T_KBD;
 			write_cga(&nkbd, TYPE_HEX);
-			while(1);
 	switch(tf->trapno) {
 		case T_TIMER:
 			break;
