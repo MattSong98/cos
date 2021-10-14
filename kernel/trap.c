@@ -44,7 +44,7 @@ trap(struct trapframe *tf)
 		return;
 	}
 	
-	switch (0x21) {
+	switch (tf->trapno) {
 		case 0x20:
 		{
 			break;
