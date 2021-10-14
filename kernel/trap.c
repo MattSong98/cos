@@ -51,6 +51,8 @@ write_cga(&a, TYPE_HEX);
 		{
 			break;
 		}
+		case 0x20:
+			break;
 		case 0x21:
 		{
 			kbd_intr();
