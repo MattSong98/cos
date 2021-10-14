@@ -58,6 +58,7 @@ trap(struct trapframe *tf)
 			break;
 
 		case T_KBD:
+			while(1);
 			uint no = tf->trapno;
 			write_cga(&no, TYPE_HEX);
 			while(1);		
