@@ -7,7 +7,7 @@ AS = as
 LD = ld
 OBJCOPY = objcopy
 OBJDUMP = objdump
-CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-jump-tables
+CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector 
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 LDFLAGS = -m elf_i386
 
