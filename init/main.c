@@ -24,8 +24,6 @@ main(void) {
 	idt_init();
 	char mesg5[] = "idt ready  ";
 	write_cga(mesg5, TYPE_STR);
-
-	sti();
 	
 	while(1);
 	return 0;

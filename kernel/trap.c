@@ -19,14 +19,23 @@
 
 static struct gate_desc idt[IDT_SIZE];
 
+static void 
+set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
+	p->off_15_0 = offset & 0xFFFF;
+	p->off_31_16 = offset >> 16;
+	p->cs = cs;
+	p->type = type;
+}
+
 void 
 idt_init()
 {
 	for (ushort i = 0; i < IDT_SIZE; i++) {
-		SET_GATE(idt[i], vectors[i], CODE_SEL, INTERRUPT_GATE);	
+		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
-	SET_GATE(idt[T_SYSCALL], vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
+	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
 	lidt((uint)idt, sizeof(idt));
+	sti();
 }
 
 void
