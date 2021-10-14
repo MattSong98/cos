@@ -4,9 +4,7 @@
 // to the configuration in early linux 0.11. its interaction 
 // mechanism with x86 CPU is illustrated below: TODO
 
-#include "types.h"
-#include "x86.h"
-#include "pic.h"
+#include "defs.h"
 
 // Current irq mask
 // Initial irq mask has irq2 enabled for slave pic

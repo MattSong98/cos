@@ -1,5 +1,3 @@
-#include "types.h"
-#include "console.h"
 #include "defs.h"
 
 void panic() {

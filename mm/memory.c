@@ -6,11 +6,9 @@
 // for frames of user space processes.
 // We assume there is at least 64M space available.
 
-#include "types.h"
 #include "defs.h"
-#include "memory.h"
 
-uchar mm_map[PAGING_PAGES];
+static uchar mm_map[PAGING_PAGES];
 
 void 
 mm_init() 

@@ -1,7 +1,4 @@
-#include "types.h"
 #include "defs.h"
-#include "x86.h"
-#include "console.h"
 
 static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];

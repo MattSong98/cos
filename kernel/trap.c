@@ -15,12 +15,7 @@
 // (0x40 is the syscall vector chosed by cos). 
 
 
-#include "types.h"
-#include "trap.h"
-#include "x86.h"
-#include "pic.h"
 #include "defs.h"
-#include "console.h"
 
 static struct gate_desc idt[IDT_SIZE];
 
