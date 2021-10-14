@@ -39,8 +39,8 @@ idt_init()
 void
 trap(struct trapframe *tf) 
 {
-	char mesg[] = "trapping...";
-	write_cga(mesg, TYPE_STR);
+	// char mesg[] = "trapping...";
+	// write_cga(mesg, TYPE_STR);
 
 	if(tf->trapno == T_SYSCALL) {
 		// do nothing for now
