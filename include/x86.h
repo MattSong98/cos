@@ -24,13 +24,13 @@ outb(ushort port, uchar data)
 }
 
 static inline void 
-lidt(struct gate_desc *p, int size)
+lidt(uint ad, int size)
 {
 	volatile ushort pd[3];
 
 	pd[0] = size - 1;
-	pd[1] = (uint)p & 0xFFFF;
-	pd[2] = (uint)p >> 16;
+	pd[1] = ad & 0xFFFF;
+	pd[2] = ad >> 16;
 
 	asm volatile("lidt (%0)" : : "r" (pd));
 }

@@ -33,6 +33,15 @@
 // trap vectors from trapasm.S
 extern uint vectors[];
 
+// x86 gate descriptor
+struct gate_desc 
+{
+	uint off_15_0 : 16;
+	uint cs : 16;
+	uint type : 16;
+	uint off_31_16 : 16;
+};
+
 // Layout of the trap frame built on the stack by the
 // hardware and by trapasm.S, and passed to trap.c.
 struct trapframe {
