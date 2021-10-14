@@ -20,6 +20,7 @@
 #include "x86.h"
 #include "pic.h"
 #include "defs.h"
+#include "console.h"
 
 static struct gate_desc idt[IDT_SIZE];
 
@@ -36,6 +37,9 @@ idt_init()
 void
 trap(struct trapframe *tf) 
 {
+	char mesg[] = "trapping...";
+	write_cga(mesg, TYPE_STR);
+
 	if(tf->trapno == T_SYSCALL) {
 		// do nothing for now
 		return;
