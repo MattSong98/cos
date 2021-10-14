@@ -1,11 +1,6 @@
 #ifndef _TRAP_H
 #define _TRAP_H
 
-// kernel space selectors
-#define CODE_SEL	0x08
-#define DATA_SEL	0x10
-#define SCRN_SEL	0x18
-
 // type of gates 
 #define INTERRUPT_GATE	0x8F00
 #define TRAP_GATE				0xEF00
@@ -13,7 +8,7 @@
 // idt size shall not be over 0x100
 #define IDT_SIZE 0x100
 
-// trap vectors shall be consistent to pic offset and irq 
+// Attention! trap vectors shall be consistent to pic offset and irq 
 // convention in include/pic.h
 #define T_TIMER		0x20
 #define T_KBD			0x21
@@ -29,9 +24,6 @@
 	(gate).type = (uint)(tag) & 0xFFFF;		\
 	(gate).off_31_16 = (uint)(off) >> 16;		\
 }																					
-
-// trap vectors from trapasm.S
-extern uint vectors[];
 
 // x86 gate descriptor
 struct gate_desc 

@@ -1,14 +1,6 @@
 #ifndef _X86_H
 #define _X86_H
 
-struct gate_desc 
-{
-	uint off_15_0 : 16;
-	uint cs : 16;
-	uint type : 16;
-	uint off_31_16 : 16;
-};
-
 static inline uchar 
 inb(ushort port) 
 {
@@ -24,7 +16,7 @@ outb(ushort port, uchar data)
 }
 
 static inline void 
-lidt(uint ad, int size)
+lidt(uint ad, ushort size)
 {
 	volatile ushort pd[3];
 

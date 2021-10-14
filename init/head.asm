@@ -9,7 +9,7 @@ SCRN_SEL equ 0x0018
 ;##############################################################################
 
 segment .text
-		global init, _copy_to_cga
+		global init, copy_to_cga
 		extern main
 
 page_dir:
@@ -125,7 +125,7 @@ align 4
 tty_pos:
 		dw 0
 
-_copy_to_cga:
+copy_to_cga:
 		push ebp
 		mov ebp, esp
 		push esi

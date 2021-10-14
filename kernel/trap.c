@@ -31,9 +31,7 @@ idt_init()
 		SET_GATE(idt[i], vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
 	SET_GATE(idt[T_SYSCALL], vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
-	lidt(idt, sizeof(idt));
-	uint size = sizeof(idt);
-	write_cga(&size, TYPE_HEX);
+	lidt((uint)idt, sizeof(idt));
 }
 
 void

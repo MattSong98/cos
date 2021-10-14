@@ -20,7 +20,7 @@ static void
 flush() 
 {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
-		_copy_to_cga(buf[i], atr[i], i);
+		copy_to_cga(buf[i], atr[i], i);
 	}
 	update_cursor(pos);
 }

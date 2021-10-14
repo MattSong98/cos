@@ -10,7 +10,4 @@
 #define CGA_COL_SIZE 80
 #define CGA_STD_ATR 0x07
 
-extern void 
-_copy_to_cga (uchar c, uchar atr, ushort pos);
-
 #endif
