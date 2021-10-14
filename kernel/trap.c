@@ -53,38 +53,18 @@ trap(struct trapframe *tf)
 			uint nkbd = T_KBD;
 			write_cga(&nkbd, TYPE_HEX);
 
-	switch(tf->trapno) {
-		case T_TIMER:
-			break;
-
-		case T_KBD:
-			while(1);
-			uint no = tf->trapno;
-			write_cga(&no, TYPE_HEX);
-			while(1);		
-			// kbd_intr();
-			pic_send_eoi(IRQ_KBD);
-			break;
+	if (tf->trapno == T_KBD) {
+			char mesg1[] = "kbd irq exec";
+			write_cga(mesg1, TYPE_STR);
 			
-		case T_SPUR7:
-			// shall not send eoi. once no device 
-			// attaches to irq7, it's fine to leave 
-			// it unhandled.
-			break;
+	} else {
+			char mesg2[] = "unknown exec";
+			write_cga(mesg2, TYPE_STR);
+			
+	}
 
-		case T_IDE:
-			break;
-
-		case T_SPUR15:
-			// same as spurious irq on irq7
-			break;
-
-		default:
-			no = tf->trapno;
-			write_cga(&no, TYPE_HEX);
-			while(1);		
 			// do nothing for now
-	}	
+	
 }
 
 
