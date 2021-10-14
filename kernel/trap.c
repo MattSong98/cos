@@ -39,12 +39,9 @@ idt_init()
 void
 trap(struct trapframe *tf) 
 {
-	// char mesg[] = "trapping...";
-	// write_cga(mesg, TYPE_STR);
+	char mesg[] = "trapping...";
+	write_cga(mesg, TYPE_STR);
 
-	uint no = tf->trapno;
-	write_cga(&no, TYPE_HEX);
-	while(1);
 
 	if(tf->trapno == T_SYSCALL) {
 		// do nothing for now
@@ -56,6 +53,9 @@ trap(struct trapframe *tf)
 			break;
 
 		case T_KBD:
+			uint no = tf->trapno;
+			write_cga(&no, TYPE_HEX);
+			while(1);
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
