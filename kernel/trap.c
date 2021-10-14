@@ -46,6 +46,18 @@ trap(struct trapframe *tf)
 	uint a = tf->trapno;
 write_cga(&a, TYPE_HEX);
 write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
 	switch (a) {
 		case 0x20:
 			break;
@@ -55,8 +67,6 @@ write_cga(&a, TYPE_HEX);
 			pic_send_eoi(IRQ_KBD);
 			break;
 		}
-		case 0x11:
-			break;
 		case 0x2E:
 			break;
 		case 0x2F:
