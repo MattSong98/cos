@@ -81,7 +81,8 @@ trap(struct trapframe *tf)
 
 		default:
 			// do nothing for now
-	}		
+	}	
+	while(1);	
 }
 
 
