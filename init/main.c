@@ -14,6 +14,7 @@ main(void) {
 	pic_init();
 	init_cga();
 	kbd_init();
+	idt_init();
 	sti();
 	
 	while(1);

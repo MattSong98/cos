@@ -1,6 +1,10 @@
 #ifndef _DEFS_H
 #define _DEFS_H
 
+// trap.c
+
+extern void idt_init(void);
+
 // pic.c
 
 extern void pic_init(void);

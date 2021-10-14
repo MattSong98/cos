@@ -19,37 +19,11 @@ init:
 		mov ss, ax
 		mov esp, init_stack 
 		call load_gdt
-		call load_idt
 		call flush_sreg
 		jmp setup_page_dir
 
 load_gdt:
 		lgdt ds:[gdt_48]
-		ret
-
-load_idt:
-		mov eax, CODE_SEL                       ;; prepare descriptor
-		shl eax, 16
-		mov ax, interrupt_ignore
-		mov ebx, interrupt_ignore		                 
-		mov bx, 0x8e00
-		mov ecx, 256                            ;; copy to idt  
-		mov esi, idt
-f_li:
-		mov dword ds:[esi], eax
-		mov dword ds:[esi+4], ebx
-		add esi, 8
-		dec ecx
-		jnz f_li
-		mov eax, CODE_SEL                       ;; prepare syscall_gate descriptor
-		shl eax, 16
-		mov ax, sys_call
-		mov edx, 0x0000ef00 
-		mov ecx, 0x80
-		lea esi, [idt+ecx*8]
-		mov dword ds:[esi], eax                 ;; move to 0x80
-		mov dword ds:[esi+4], edx  
-		lidt ds:[idt_48]         
 		ret
 
 flush_sreg:
@@ -117,31 +91,6 @@ spin:
 		jmp spin
 
 ;##############################################################################
-;################################ INTERRUPT ###################################
-;##############################################################################
-
-align 4
-
-interrupt_ignore:
-		push ebp
-		mov ebp, esp
-		push dword 0
-		push dword 0xb
-		push dword ecx
-		call _copy_to_cga
-		add esp, 12
-		inc ecx
-		in al, 0x60
-		mov al, 0x20
-		out 0x20, al
-		leave
-		iret
-
-sys_call:
-		iret
-
-
-;##############################################################################
 ;############################### INIT STACK ###################################
 ;##############################################################################
 
@@ -154,18 +103,11 @@ init_stack:
 ;############################### IDT & GDT ####################################
 ;##############################################################################
 
-idt_48:
-		dw 256*8-1
-		dd idt
-
 gdt_48:
 		dw 256*8-1
 		dd gdt
 
 align 8
-
-idt:
-		times 256 dd 0, 0
 
 gdt:
 		dw 0, 0, 0, 0
