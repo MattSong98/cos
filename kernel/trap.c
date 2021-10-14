@@ -80,9 +80,11 @@ trap(struct trapframe *tf)
 			break;
 
 		default:
+			no = tf->trapno;
+			write_cga(&no, TYPE_HEX);
+			while(1);		
 			// do nothing for now
 	}	
-	while(1);	
 }
 
 
