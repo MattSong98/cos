@@ -61,6 +61,7 @@ trap(struct trapframe *tf)
 			write_cga(&no, TYPE_HEX);
 			
 			kbd_intr();
+			while(1);
 			pic_send_eoi(IRQ_KBD);
 			while(1);
 			break;
