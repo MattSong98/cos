@@ -47,7 +47,7 @@ trap(struct trapframe *tf)
 write_cga(&a, TYPE_HEX);
 write_cga(&a, TYPE_HEX);
 	switch (a) {
-		case 0x20:
+		case 0x40:
 		{
 			break;
 		}
