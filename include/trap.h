@@ -17,14 +17,6 @@
 #define T_SPUR15	0x2F
 #define T_SYSCALL 0x30
 
-#define SET_GATE(gate, off, sel, tag)		\
-{																					\
-	(gate).off_15_0 = (uint)(off) & 0xFFFF; \
-	(gate).cs = (uint)(sel) & 0xFFFF; 			\
-	(gate).type = (uint)(tag) & 0xFFFF;		\
-	(gate).off_31_16 = (uint)(off) >> 16;		\
-}																					
-
 // x86 gate descriptor
 struct gate_desc 
 {
