@@ -62,8 +62,10 @@ target/trapasm.o: kernel/trapasm.S
 clean: 
 	rm -rf target/*
 
-run: pull
+run: 
 	bochs -q -f bochsrc
+
+pullr: pull run 
 
 push: 
 	git add -A

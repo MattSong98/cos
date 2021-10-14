@@ -39,37 +39,20 @@ idt_init()
 void
 trap(struct trapframe *tf) 
 {
-
 	if(tf->trapno == T_SYSCALL) {
 		// do nothing for now
 		return;
 	}
 	
 	switch (tf->trapno) {
-		case T_TIMER:
-			break;
-
 		case T_KBD:
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
-			
-		case T_SPUR7:
-			// shall not send eoi. once no device 
-			// attaches to irq7, it's fine to leave 
-			// it unhandled.
-			break;
-
-		case T_IDE:
-			break;
-
-		case T_SPUR15:
-			// same as spurious irq on irq7
-			break;
-
 		default:
-			// do nothing for now
-	}		
+			while(1);
+	}
+			
 }
 
 
