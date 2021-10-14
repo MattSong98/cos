@@ -23,7 +23,7 @@ target/boot: init/boot.asm
 	nasm init/boot.asm -o target/boot
 
 target/kernel: target/kernel.out
-	$(OBJCOPY) -O binary -j .text -j .data -j .bss --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
+	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
 target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o
 	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o
