@@ -47,10 +47,6 @@ trap(struct trapframe *tf)
 write_cga(&a, TYPE_HEX);
 write_cga(&a, TYPE_HEX);
 	switch (a) {
-		case 0x40:
-		{
-			break;
-		}
 		case 0x20:
 			break;
 		case 0x21:
@@ -59,8 +55,6 @@ write_cga(&a, TYPE_HEX);
 			pic_send_eoi(IRQ_KBD);
 			break;
 		}
-		case 0x27:
-			break;
 		case 0x2E:
 			break;
 		case 0x2F:
