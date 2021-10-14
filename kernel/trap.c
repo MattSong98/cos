@@ -44,7 +44,8 @@ trap(struct trapframe *tf)
 		return;
 	}
 	uint a = tf->trapno;
-//	write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
+write_cga(&a, TYPE_HEX);
 	switch (a) {
 		case 0x20:
 		{
