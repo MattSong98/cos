@@ -53,7 +53,19 @@ trap(struct trapframe *tf)
 			uint nkbd = T_KBD;
 			write_cga(&nkbd, TYPE_HEX);
 
-	if (tf->trapno == T_KBD) {
+
+	switch (tf->trapno) {
+		case T_KBD:
+			kbd_intr();
+			pic_send_eoi(T_KBD);
+			break;
+		default:
+			while(1);
+	}
+			
+		
+
+/*	if (tf->trapno == T_KBD) {
 			char mesg1[] = "kbd irq exec";
 			write_cga(mesg1, TYPE_STR);
 			kbd_intr();
@@ -66,7 +78,7 @@ trap(struct trapframe *tf)
 	}
 
 			// do nothing for now
-	
+	*/
 }
 
 
