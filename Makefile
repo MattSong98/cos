@@ -3,10 +3,12 @@
 ########################
 
 CC = gcc
+AS = as
 LD = ld
 OBJCOPY = objcopy
 OBJDUMP = objdump
 CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector
+ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 LDFLAGS = -m elf_i386
 
 ########################
@@ -23,8 +25,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o
+target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o
 
 target/head.o: init/head.asm
 	nasm -f elf32 init/head.asm -o target/head.o
@@ -49,6 +51,9 @@ target/pic.o: dev/pic.c
 
 target/trap.o: kernel/trap.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c kernel/trap.c -o target/trap.o
+
+target/trapasm.o: kernel/trapasm.S
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/trapasm.S -o target/trapasm.o
 
 ########################
 ###### ULTILITIES ######

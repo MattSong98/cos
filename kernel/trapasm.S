@@ -8,7 +8,7 @@ alltraps:
   pushal
   
   # Set up data segments.
-  movw $(DATA_SEL), %ax
+  movw $(0x10), %ax
   movw %ax, %ds
   movw %ax, %es
 

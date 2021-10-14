@@ -16,6 +16,7 @@ extern void clear_cga(void);
 // kbd.c
 extern void kbd_init(void);
 extern int kbdgetc(void);
+extern void kbd_intr(void);
 
 // mm.c
 

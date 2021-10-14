@@ -1,7 +1,15 @@
 #ifndef _X86_H
 #define _X86_H
 
-static inline uchar
+struct gate_desc 
+{
+	uint off_15_0 : 16;
+	uint cs : 16;
+	uint type : 16;
+	uint off_31_16 : 16;
+};
+
+static inline uchar 
 inb(ushort port) 
 {
 	uchar data;
