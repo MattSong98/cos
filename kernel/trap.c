@@ -56,6 +56,8 @@ trap(struct trapframe *tf)
 	if (tf->trapno == T_KBD) {
 			char mesg1[] = "kbd irq exec";
 			write_cga(mesg1, TYPE_STR);
+			kbd_intr();
+			pic_send_eoi(T_KBD);
 			
 	} else {
 			char mesg2[] = "unknown exec";
