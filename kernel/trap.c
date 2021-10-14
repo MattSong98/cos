@@ -43,8 +43,9 @@ trap(struct trapframe *tf)
 		// do nothing for now
 		return;
 	}
-	
-	switch (tf->trapno) {
+	uint a = tf->trapno;
+	write_cga(&a, TYPE_HEX);
+	switch (a) {
 		case 0x20:
 		{
 			break;
