@@ -8,12 +8,18 @@
 
 int 
 main(void) {
-
+	char mesg[] = "hello, there!";
+	write_cga(mesg, TYPE_STR);
 	mm_init();
+	write_cga(mesg, TYPE_STR);
 	pic_init();
+	write_cga(mesg, TYPE_STR);
 	init_cga();
+	write_cga(mesg, TYPE_STR);
 	kbd_init();
+	write_cga(mesg, TYPE_STR);
 	idt_init();
+	write_cga(mesg, TYPE_STR);
 	sti();
 	
 	while(1);
