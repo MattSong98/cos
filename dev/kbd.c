@@ -115,11 +115,11 @@ kbd_init(void)
 int 
 kbdgetc(void) 
 {
-	static uint shift;
+	static uchar shift;
 	static uchar *charcode[4] = {
 		normalmap, shiftmap, ctlmap, ctlmap
 	};
-	uint data, c;
+	uchar data, c;
 
 	if((inb(0x64) & 0x01) == 0) return -1;
 	data = inb(0x60);
@@ -139,11 +139,7 @@ kbdgetc(void)
 void 
 kbd_intr()
 {
-	int ret = kbdgetc();
-	if (ret > 0) {
-		uchar c = (uchar) ret;
-		write_cga(&c, TYPE_CHAR);
-	}
+	console_intr(kbdgetc());
 }
 
 

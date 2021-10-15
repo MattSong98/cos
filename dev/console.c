@@ -4,11 +4,10 @@ static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
 
-// extern void copy_to_cga(uchar c, uchar atr, ushort pos);
-
 static void 
-copy_to_cga(uchar c, uchar atr, ushort pos) 
-{
+vram_write(uchar c, uchar atr, ushort pos) 
+{ 
+	// to be optimized 
 	ushort word = (ushort) c + (((ushort) atr) << 8);
 	asm volatile ("push %%gs\n\t"
 								"mov $0x18, %%ax\n\t"
@@ -22,7 +21,7 @@ copy_to_cga(uchar c, uchar atr, ushort pos)
 }
 
 static void 
-update_cursor(ushort pos) 
+cursor_update(ushort pos) 
 {
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (uchar) (pos & 0xFF));
@@ -34,12 +33,13 @@ static void
 flush() 
 {
 	for (ushort i = 0; i < CGA_SIZE; i++) {
-		copy_to_cga(buf[i], atr[i], i);
+		vram_write(buf[i], atr[i], i);
 	}
-	update_cursor(pos);
+	cursor_update(pos);
 }
 
-static void scroll_up() 
+static void 
+scroll_up() 
 {
 	for (ushort i = 0; i < CGA_SIZE - CGA_COL_SIZE; i++) {
 		buf[i] = buf[i+CGA_COL_SIZE];
@@ -51,7 +51,7 @@ static void scroll_up()
 }
 
 static void 
-write_char_to_buf(uchar c) 
+buf_write(uchar c) 
 {
 	if (pos == CGA_SIZE - 1) {
 		scroll_up();
@@ -60,7 +60,7 @@ write_char_to_buf(uchar c)
 }
 
 void 
-init_cga() 
+console_init() 
 {
 	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
@@ -68,10 +68,11 @@ init_cga()
 		atr[i] = CGA_STD_ATR;
 	}
 	flush();
+	kbd_init();
 }
 
 void 
-write_cga(void *ptr, int type) 
+cprintf(void *ptr, int type) 
 {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
@@ -85,10 +86,10 @@ write_cga(void *ptr, int type)
 			digits[i] = dig;
 			hex = hex / 16;
 		}
-		write_char_to_buf('0');
-		write_char_to_buf('x');
+		buf_write('0');
+		buf_write('x');
 		for (uchar i = 0; i < 8; i++) {
-			write_char_to_buf(digits[7-i]);
+			buf_write(digits[7-i]);
 		}
 		flush();
 		return;
@@ -97,7 +98,7 @@ write_cga(void *ptr, int type)
 	if (type == TYPE_STR) {
 		uchar *pchar = (uchar *)ptr;
 		while (*pchar != '\0') {
-			write_char_to_buf(*(pchar++));
+			buf_write(*(pchar++));
 		}
 		flush();
 		return;
@@ -105,18 +106,21 @@ write_cga(void *ptr, int type)
 
 	if (type == TYPE_CHAR) {
 		uchar c = *(uchar *)ptr;
-		write_char_to_buf(c);
+		buf_write(c);
 		flush();
 		return;
 	}
 }
 
 void 
-clear_cga() 
+console_intr(int c) 
 {
-	pos = 0;
-	for (ushort i = 0; i < CGA_SIZE; i++) {
-		buf[i] = ' ';
-	}
-	flush();
+	if (c == -1) panic();
+	if (c == 0) return;
+	
+	cprintf(&c, TYPE_CHAR);
 }
+
+
+
+

@@ -28,14 +28,13 @@ set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
 }
 
 void 
-idt_init()
+trap_init()
 {
 	for (ushort i = 0; i < IDT_SIZE; i++) {
 		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
 	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
 	lidt((uint)idt, sizeof(idt));
-	sti();
 }
 
 void
@@ -47,19 +46,17 @@ trap(struct trapframe *tf)
 	}
 
 	switch (tf->trapno) {
-		case 0x20:
+		case T_TIMER:
 			break;
-		case 0x21:
-		{
+		case T_KBD:
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
-		}
-		case 0x27:
+		case T_SPUR7:
 			break;
-		case 0x2E:
+		case T_IDE:
 			break;
-		case 0x2F:
+		case T_SPUR15:
 			break;
 		default:
 			// unknown

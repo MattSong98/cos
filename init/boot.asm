@@ -1,3 +1,5 @@
+; Note This File should be rewritten to boot.S (GNU)
+
 BOOTSEG equ 0x07c0
 INITSEG equ 0x9000
 SYSSEG  equ 0x1000

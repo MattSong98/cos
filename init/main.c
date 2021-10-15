@@ -1,30 +1,25 @@
-// main called by head.s
-// from now on, we stay with C.
+// C entry
 
 #include "defs.h"
 
 int 
 main(void) {
-	init_cga();
-	char mesg1[] = "cga ready  ";
-	write_cga(mesg1, TYPE_STR);
-	
+
+	// setup memory & trap	
 	mm_init();
-	char mesg2[] = "mm ready  ";
-	write_cga(mesg2, TYPE_STR);
+	trap_init();
 
+	// setup i/o dev
+	// console remains fixing
+	// to-do: ide, timer, dma, nic
 	pic_init();
-	char mesg3[] = "pic ready  ";
-	write_cga(mesg3, TYPE_STR);
+	console_init();
 
-	kbd_init();
-	char mesg4[] = "kbd ready  ";
-	write_cga(mesg4, TYPE_STR);
+	// enable interrupt
+	sti();
 
-	idt_init();
-	char mesg5[] = "idt ready  ";
-	write_cga(mesg5, TYPE_STR);
-	
-	while(1);
+	// spin	
+	for(;;);	
 	return 0;
+
 }   

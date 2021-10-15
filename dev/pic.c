@@ -1,8 +1,7 @@
 // It is important to note that APIC has replaced the 8259 PIC 
 // in more modern system, especially those with multiple cores.
 // we choose to setup PIC in a rather simple way, which conforms 
-// to the configuration in early linux 0.11. its interaction 
-// mechanism with x86 CPU is illustrated below: TODO
+// to the configuration in early linux 0.11. 
 
 #include "defs.h"
 

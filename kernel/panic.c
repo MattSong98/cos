@@ -1,7 +1,8 @@
 #include "defs.h"
 
-void panic() {
-	uchar mesg[] = "Kernel Panic!";
-	write_cga(mesg, TYPE_STR);
+void 
+panic() 
+{
+	// spin
 	for(;;);
 }	

@@ -1,3 +1,5 @@
+; Note This File should be rewritten to head.S (GNU)
+
 CODE_SEL equ 0x0008
 DATA_SEL equ 0x0010
 SCRN_SEL equ 0x0018
@@ -80,7 +82,7 @@ f_spt:
 		cmp ecx, 0x4000
 		jl f_spt
 
-to_entry:
+to_C:
 		xor eax, eax
 		mov cr3, eax
 		mov eax, cr0
@@ -115,32 +117,6 @@ gdt:
 		dw 0x07ff, 0x0000, 0x9200, 0x00c0
 		dw 0x0002, 0x8000, 0x920b, 0x00c0
 		times 256*8-($-gdt) db 0
-
-;##############################################################################
-;################################# PRINT ######################################
-;##############################################################################
-
-align 4
-
-tty_pos:
-		dw 0
-
-; copy_to_cga:
-		push ebp
-		mov ebp, esp
-		push esi
-		mov ax, SCRN_SEL
-		mov gs, ax
-		mov ax, [ebp+12]
-		shl ax, 8
-		mov byte al, [ebp+8]
-		mov esi, [ebp+16]
-		shl esi, 1
-		mov word gs:[esi], ax
-		pop esi
-		mov esp, ebp
-		pop ebp
-		ret
 
 ;##############################################################################
 ;################################## END #######################################
