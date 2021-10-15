@@ -22,9 +22,6 @@
 // trapasm.S
 extern uint vectors[];
 
-// head.asm
-extern void copy_to_cga (uchar c, uchar atr, ushort pos);
-
 // trap.c
 extern void idt_init(void);
 extern void trap(struct trapframe *);

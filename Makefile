@@ -33,25 +33,25 @@ target/head.o: init/head.asm
 	nasm -f elf32 init/head.asm -o target/head.o
 
 target/main.o: init/main.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c init/main.c -o target/main.o
+	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -Iinclude -c init/main.c -o target/main.o
 
 target/memory.o: mm/memory.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c mm/memory.c -o target/memory.o
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c mm/memory.c -o target/memory.o
 
 target/console.o: dev/console.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/console.c -o target/console.o
 
 target/kbd.o: dev/kbd.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/kbd.c -o target/kbd.o
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/kbd.c -o target/kbd.o
 
 target/panic.o: kernel/panic.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c kernel/panic.c -o target/panic.o
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/panic.c -o target/panic.o
 
 target/pic.o: dev/pic.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/pic.c -o target/pic.o
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/pic.c -o target/pic.o
 
 target/trap.o: kernel/trap.c
-	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c kernel/trap.c -o target/trap.o
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/trap.c -o target/trap.o
 
 target/trapasm.o: kernel/trapasm.S
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/trapasm.S -o target/trapasm.o

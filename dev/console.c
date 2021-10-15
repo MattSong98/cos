@@ -4,6 +4,23 @@ static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
 
+// extern void copy_to_cga(uchar c, uchar atr, ushort pos);
+
+static void 
+copy_to_cga(uchar c, uchar atr, ushort pos) 
+{
+	ushort word = (ushort) c + (((ushort) atr) << 8);
+	asm volatile ("push %%gs\n\t"
+								"mov $0x18, %%ax\n\t"
+								"mov %%ax, %%gs\n\t"
+								"shl $1, %1\n\t"
+								"movw %0, %%gs:(%1)\n\t"
+								"pop %%gs\n\t"
+								:	// no output
+								: "r" (word), "D" (pos)
+								: "eax");
+}
+
 static void 
 update_cursor(ushort pos) 
 {
