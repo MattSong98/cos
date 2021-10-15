@@ -2,11 +2,12 @@
 # TOOLCHAIN DEFINITION #
 ########################
 
-CC = gcc
-AS = as
-LD = ld
-OBJCOPY = objcopy
-OBJDUMP = objdump
+TOOLPREFIX = x86_64-elf-
+CC = $(TOOLPREFIX)gcc
+AS = $(TOOLPREFIX)as
+LD = $(TOOLPREFIX)ld
+OBJCOPY = $(TOOLPREFIX)objcopy
+OBJDUMP = $(TOOLPREFIX)objdump
 CFLAGS = -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector 
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 LDFLAGS = -m elf_i386
@@ -64,8 +65,6 @@ clean:
 
 run: 
 	bochs -q -f bochsrc
-
-pullr: pull run 
 
 push: 
 	git add -A
