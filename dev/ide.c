@@ -50,7 +50,7 @@ static int
 ide_wait(int checkerr)
 {
 	uchar r;
-	while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY) {
+	while (((r = inb(0x1f7)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY) {
 		uint i = (uint) r;
 		cprintf(&i, TYPE_HEX);
 	}
