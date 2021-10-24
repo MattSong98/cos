@@ -92,13 +92,15 @@ ps2_init()
 	while ((inb(0x64) & 0x02) != 0);
 	outb(0x64, 0xAA);
 	while ((inb(0x64) & 0x01) != 1);
-	if (inb(0x60) != 0x55) panic();
+	if (inb(0x60) != 0x55) 
+		panic("ps2_init");
 	
 	// Perform Interface Tests (only for the first port)
 	while ((inb(0x64) & 0x02) != 0);
 	outb(0x64, 0xAB);
 	while ((inb(0x64) & 0x01) != 1);
-	if (inb(0x60) != 0x00) panic();
+	if (inb(0x60) != 0x00) 
+		panic("ps2_init");
 
 	// Enable Device (only for the first port)
 	while ((inb(0x64) & 0x02) != 0);

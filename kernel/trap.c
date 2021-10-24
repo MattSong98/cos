@@ -47,6 +47,8 @@ trap(struct trapframe *tf)
 
 	switch (tf->trapno) {
 		case T_TIMER:
+			// do nothing for now
+			pic_send_eoi(IRQ_TIMER);
 			break;
 		case T_KBD:
 			kbd_intr();
@@ -55,12 +57,14 @@ trap(struct trapframe *tf)
 		case T_SPUR7:
 			break;
 		case T_IDE:
+			ide_intr();
+			pic_send_eoi(IRQ_IDE);
 			break;
 		case T_SPUR15:
 			break;
 		default:
 			// unknown
-			panic();
+			panic("trap");
 	}
 			
 }

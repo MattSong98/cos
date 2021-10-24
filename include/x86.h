@@ -33,4 +33,30 @@ sti(void)
 	asm volatile("sti");
 }
 
+static inline void
+cli(void)
+{
+	asm volatile("cli");
+}
+
+// mov dword from port to es:addr cnt times.
+static inline void
+insl(int port, void *addr, int cnt)
+{
+  asm volatile("cld; rep insl" :
+               "=D" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "memory", "cc");
+}
+
+// mov dword from es:addr to port cnt times.
+static inline void
+outsl(int port, const void *addr, int cnt)
+{
+  asm volatile("cld; rep outsl" :
+               "=S" (addr), "=c" (cnt) :
+               "d" (port), "0" (addr), "1" (cnt) :
+               "memory", "cc");
+}
+
 #endif

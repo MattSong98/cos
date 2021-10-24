@@ -2,19 +2,20 @@
 
 #include "defs.h"
 
-int 
+int
 main(void) {
 
-	// setup memory & trap	
-	mm_init();
-	trap_init();
-
-	// setup i/o dev
-	// console remains fixing
-	// to-do: ide, timer, dma, nic
-	pic_init();
 	console_init();
+	
+	kvm_init();
+	pgalloc_init();
 
+	pic_init();
+	timer_init();
+	ide_init();
+	
+	cprintf("hello", TYPE_STR);
+	trap_init();
 	// enable interrupt
 	sti();
 

@@ -10,13 +10,13 @@ vram_write(uchar c, uchar atr, ushort pos)
 	// to be optimized 
 	ushort word = (ushort) c + (((ushort) atr) << 8);
 	asm volatile ("push %%gs\n\t"
-								"mov $0x18, %%ax\n\t"
+								"mov %2, %%ax\n\t"
 								"mov %%ax, %%gs\n\t"
 								"shl $1, %1\n\t"
 								"movw %0, %%gs:(%1)\n\t"
 								"pop %%gs\n\t"
 								:	// no output
-								: "r" (word), "D" (pos)
+								: "r" (word), "D" (pos), "i" (SCRN_SEL)
 								: "eax");
 }
 
@@ -72,7 +72,7 @@ console_init()
 }
 
 void 
-cprintf(void *ptr, int type) 
+cprintf(const void *ptr, int type) 
 {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
@@ -115,7 +115,7 @@ cprintf(void *ptr, int type)
 void 
 console_intr(int c) 
 {
-	if (c == -1) panic();
+	if (c == -1) panic("console_intr");
 	if (c == 0) return;
 	
 	cprintf(&c, TYPE_CHAR);

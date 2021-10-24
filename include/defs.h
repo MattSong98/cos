@@ -11,11 +11,13 @@
 #include "types.h"
 #include "x86.h"
 #include "kbd.h"
+#include "ide.h"
 #include "console.h"
 #include "memory.h"
 #include "pic.h"
 #include "trap.h"
-
+#include "timer.h"
+#include "proc.h"
 
 // Global Functions & Variables
 
@@ -33,20 +35,31 @@ extern void pic_send_eoi(uchar);
 
 // console.c
 extern void console_init(void);
-extern void cprintf(void *, int);
+extern void cprintf(const void *, int);
 extern void console_intr(int);
+
+// ide.c
+extern void ide_init(void);
+extern void ide_intr(void);
+extern struct ide_buf *ide_bget(uint, uint);
+// extern void ide_brelse(void);
+
+// timer.c
+extern void timer_init(void);
 
 // kbd.c
 extern void kbd_init(void);
 extern int kbdgetc(void);
 extern void kbd_intr(void);
 
-// mm.c
-extern void mm_init(void);
-extern uint get_free_page(void);
-extern int free_page(uint);
+// vm.c
+extern void kvm_init(void);
+extern void pgalloc_init(void);
+extern void page_free(uint);
+extern uint page_alloc(void);
+extern void kvm_setup(struct pte *);
 
 // panic.c
-extern void panic(void);
+extern void panic(const char *);
 
 #endif
