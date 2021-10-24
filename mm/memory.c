@@ -11,8 +11,7 @@
 // cause cr3 does not make use of the low 12 bits.
 __attribute__((__aligned__(NORM_PAGE_SIZE)))
 struct pte kpgtab[PTES];
-__attribute__((__aligned__(NORM_PAGE_SIZE)))
-struct pte pgtabs[PROCS][PTES];
+
 // allocable physical pages
 static struct phypage *free_page_list;
 

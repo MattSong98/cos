@@ -20,8 +20,6 @@ struct phypage {
 };
 #endif
 
-#define NULL 0
-
 #define CR0_PE	(1<<0) 
 #define CR0_WP	(1<<16)
 #define CR0_PG	(1<<31)

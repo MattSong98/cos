@@ -52,6 +52,20 @@ extern void kbd_init(void);
 extern int kbdgetc(void);
 extern void kbd_intr(void);
 
+// proc.c
+extern void proc_init(void);
+extern struct proc *proc_alloc(void);
+extern void user_init(void);
+extern void fork(void);
+extern void exec(void);
+extern void exit(void);
+extern void wait(void);
+extern void yield(void);
+extern void sleep(void);
+extern void wakeup(void);
+extern void scheduler(void);
+extern void kill(void);
+
 // vm.c
 extern void kvm_init(void);
 extern void pgalloc_init(void);

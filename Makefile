@@ -16,9 +16,9 @@ LDFLAGS = -m elf_i386
 ##### MAKE PROCESS #####
 ########################
 
-target/cos.img: target/boot target/kernel
-	dd if=target/boot of=target/cos.img bs=512 count=1
-	dd if=target/kernel of=target/cos.img bs=512 seek=1
+cos.img: target/boot target/kernel
+	dd if=target/boot of=cos.img bs=512 count=1
+	dd if=target/kernel of=cos.img bs=512 seek=1
 
 target/boot: init/boot.asm
 	nasm init/boot.asm -o target/boot
@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o
+target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o
 
 target/head.o: init/head.asm
 	nasm -f elf32 init/head.asm -o target/head.o
@@ -37,6 +37,9 @@ target/main.o: init/main.c
 
 target/memory.o: mm/memory.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c mm/memory.c -o target/memory.o
+
+target/proc.o: kernel/proc.c
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/proc.c -o target/proc.o
 
 target/console.o: dev/console.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/console.c -o target/console.o

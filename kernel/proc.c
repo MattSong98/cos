@@ -1,9 +1,9 @@
 #include "defs.h"
 
-#define KSTACK_SIZE 4096
-
 /* shared */
-struct proc_list plist;
+struct {
+	struct proc procs[PROCS];
+} proc_table;
 
 /* shared */
 // page tables for procs
@@ -19,8 +19,8 @@ void
 proc_init()
 {
 	for (uint i = 0; i < PROCS; i++) {
-		plist.procs[i].state = UNUSED;
-		plist.procs[i].pid = i;
+		proc_table.procs[i].state = UNUSED;
+		proc_table.procs[i].pid = i;
 	}
 }
 
@@ -32,15 +32,12 @@ proc_alloc()
 	uchar *esp;
 
 	for (uint i = 0; i < PROCS; i++) {
-		if (plist.procs[i].state == UNUSED) {
-			p = &(plist.procs[i]);
+		if (proc_table.procs[i].state == UNUSED) {
+			p = &(proc_table.procs[i]);
 			break;
 		}
 	}
-
-	// if not found
-	if (!p) 
-		return NULL;
+	if (!p) return NULL;	// no proc available
 
 	// update state
 	p->state = EMBRYO;
@@ -59,13 +56,13 @@ proc_alloc()
 
 	// initialize context
 	esp -= sizeof(*(p->ctx));
-	p->ctx = esp;
+	p->ctx = (struct context *) esp;
 
 	return p;
 }
 
 /* init */
-// setup first proc: init
+// create first proc: init
 void 
 user_init()
 {
@@ -124,8 +121,11 @@ wakeup()
 /* critical */
 void 
 scheduler() 
-{
-
+{	
+	sti();
+	for (;;) {
+		;
+	}
 }
 
 /* critical */

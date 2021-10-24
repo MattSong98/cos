@@ -5,6 +5,8 @@
 // file therefore it shall be the head of 
 // the including queue.
 
+#define NULL 0
+
 typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;

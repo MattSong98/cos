@@ -2,6 +2,8 @@
 #define _PROC_H
 
 #define PROCS 32
+#define PROC_NAME_SIZE	16
+#define KSTACK_SIZE	4096
 
 enum proc_state 
 { 
@@ -36,7 +38,7 @@ struct proc
 	// int killed;
 	// struct file *ofile[NOFILE];
 	// struct inode *cwd;
-	char name[16];
+	char name[PROC_NAME_SIZE];
 };
 
 struct proc_list {
