@@ -41,8 +41,8 @@ extern void console_intr(int);
 // ide.c
 extern void ide_init(void);
 extern void ide_intr(void);
-extern struct ide_buf *ide_bget(uint, uint);
-// extern void ide_brelse(void);
+extern struct ide_buf *ide_bget(uint, uint, uint);
+extern void ide_brelse(struct ide_buf *);
 
 // timer.c
 extern void timer_init(void);

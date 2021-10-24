@@ -3,36 +3,6 @@
 
 #include "defs.h"
 
-#define IDE_BUFS 16	// cache size
-
-// control block registers
-#define IDE_CTRL_PORT	0x3F6
-
-// command block registers
-#define IDE_DATA_PORT 0x1F0
-#define IDE_ERR_PORT	0x1F1
-#define IDE_CNT_PORT	0x1F2	// how many sectors
-#define IDE_POS0_PORT	0x1F3	// bit0 - bit7
-#define IDE_POS1_PORT	0x1F4	// bit8 - bit15
-#define IDE_POS2_PORT	0x1F5	// bit16 - bit23
-#define	IDE_POS3_PORT	0x1F6	// bit24 - bit27
-#define IDE_STAT_PORT	0x1F7	// read 
-#define IDE_COMD_PORT	0x1F7	// write 
-
-// POS3: bit28 - bit31
-#define IDE_MASTER	0xE0
-#define IDE_SLAVE		0xF0
-
-// from state port
-#define IDE_STAT_BUSY	0x80
-#define IDE_STAT_DRDY	0x40
-#define IDE_STAT_DF		0x20
-#define IDE_STAT_ERR	0x01
-
-// to command port 
-#define IDE_COMD_READ		0x20	// read command
-#define IDE_COMD_WRITE	0x30	// write command
-
 /* shared */
 // cache ide sectors' data by LRU
 struct {
@@ -41,7 +11,8 @@ struct {
 } ide_cache;
 
 /* shared */
-static struct ide_buf *ide_queue;	// queue of ide r/w requests
+// queue of ide r/w requests
+static struct ide_buf *ide_queue;	
 
 
 // wait until ide is ready
@@ -50,10 +21,7 @@ static int
 ide_wait(int checkerr)
 {
 	uchar r;
-	while (((r = inb(0x1f7)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY) {
-		uint i = (uint) r;
-		cprintf(&i, TYPE_HEX);
-	}
+	while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
 	if (checkerr && (r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
 		return -1;
 	return 0;
@@ -97,10 +65,10 @@ ide_init()
 	pic_enable_irq(IRQ_IDE);
 	
 	// check if the master drive is present
-	ide_wait(0);
 	outb(IDE_POS3_PORT, IDE_MASTER);	
+	ide_wait(0);
 	for (uint i = 0; i < 1000; i++) {
-		if (inb(IDE_STAT_PORT) != 0)
+		if (inb(IDE_STAT_PORT) != 0) 
 			return;
 	}
 	panic("ide_init");	// master not found
@@ -110,14 +78,17 @@ void
 ide_intr() 
 {
 	// ide_queue = ide_queue->next;
-	if (!(ide_queue->flags & IDE_BUF_DIRTY) && ide_wait(1) != 0) 
+	if (!(ide_queue->flags & IDE_BUF_DIRTY)) {
+		if (ide_wait(1) == -1)
+			panic("ide_intr");
 		insl(IDE_DATA_PORT, ide_queue->data, 512/4);
+	}
 	
 	ide_queue->flags |= IDE_BUF_VALID;	// set flag:valid
 	ide_queue->flags &= ~IDE_BUF_DIRTY;	// clear flag:dirty
 	
 	// start if queue is not empty
-	ide_queue = ide_queue->next;
+	ide_queue = ide_queue->qnext;
 	if (ide_queue != NULL)
 		ide_start(ide_queue);
 }
@@ -146,44 +117,60 @@ ide_sync(struct ide_buf *p)
 
 /* critical */
 struct ide_buf *
-ide_bget(uint dev, uint sector)
+ide_bget(uint dev, uint sector, uint access_mode)
 {
 	struct ide_buf *p;
 	for (p = ide_cache.head.next; p != &ide_cache.head; p = p->next) {
 		if (p->dev == dev && p->sector == sector) {
 			if (!(p->flags & IDE_BUF_BUSY)) {
 				p->flags |= IDE_BUF_BUSY;
+				if (access_mode == IDE_RW)
+					p->flags |= IDE_BUF_DIRTY;
 				return p;
 			} else {
-				return NULL;
+				return NULL;	// busy now
 			}
 		}
 	}
-
 	// not found in ide_cache
 	// recycle a LRU buf
 	for (p = ide_cache.head.prev; p != &ide_cache.head; p = p->prev) {
 		if (!(p->flags & IDE_BUF_BUSY)) {
-			p->flags |= IDE_BUF_BUSY;
-			if (p->flags & IDE_BUF_DIRTY)	{
-				ide_sync(p);
-				// wait for buf's ready
-				while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID);
-			}
 			p->dev = dev;
 			p->sector = sector;
 			p->flags = IDE_BUF_BUSY;
 			ide_sync(p);
 			while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID);
+			if (access_mode == IDE_RW) 
+				p->flags |= IDE_BUF_DIRTY;
 			return p;
 		}
 	}
-	return NULL;
+	return NULL;	// no buf available
 }
 
 /* critical */
 void
-ide_brelse()
+ide_brelse(struct ide_buf *p)
 {
+	if ((p->flags & IDE_BUF_BUSY) == 0)
+		panic("ide_brelse");
+	
+	// flush back to drive if dirty
+	if (p->flags & IDE_BUF_DIRTY) {
+		ide_sync(p);
+		while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID);
+	}
 
+	// move buf to the head (RU)
+	p->prev->next = p->next;
+	p->next->prev = p->prev;
+	p->next = ide_cache.head.next;
+	p->prev = &ide_cache.head;
+	ide_cache.head.next = p;
+	p->next->prev = p;
+
+	// clear flag:busy
+	p->flags &= ~IDE_BUF_BUSY;
 }
+
