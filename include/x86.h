@@ -16,6 +16,18 @@ outb(ushort port, uchar data)
 }
 
 static inline void 
+lgdt(uint ad, ushort size)
+{
+	volatile ushort pd[3];
+
+	pd[0] = size - 1;
+	pd[1] = ad & 0xFFFF;
+	pd[2] = ad >> 16;
+
+	asm volatile("lgdt (%0)" : : "r" (pd));
+}
+
+static inline void 
 lidt(uint ad, ushort size)
 {
 	volatile ushort pd[3];

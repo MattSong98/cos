@@ -7,6 +7,9 @@
 
 #include "defs.h"
 
+// gdt
+struct seg_desc gdt[GDT_SIZE];
+
 // page table should be aligned to a normal page
 // cause cr3 does not make use of the low 12 bits.
 __attribute__((__aligned__(NORM_PAGE_SIZE)))
@@ -14,6 +17,42 @@ struct pte kpgtab[PTES];
 
 // allocable physical pages
 static struct phypage *free_page_list;
+
+// setup global descriptor table for both
+// kernel space & user space.
+// local descriptor table is not used.
+
+static void 
+set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
+	p->off_15_0 = offset & 0xFFFF;
+	p->off_23_16 = (offset >> 16) & 0x00FF;
+	p->off_31_24 = offset >> 24;
+	p->limit_15_0 = limit & 0xFFFF;
+	p->limit_19_16 = limit >> 16;
+	p->type_7_0 = type & 0xFF;
+	p->type_11_8 = type >> 8;
+}
+
+void 
+gdt_init()
+{
+	// null segment
+	set_segment(&gdt[0], 0, 0, 0);
+	// code segment
+	set_segment(&gdt[1], CODE_SEG_OFFSET, CODE_SEG_LIMIT, CODE_SEG_TYPE);
+	// data segment
+	set_segment(&gdt[2], DATA_SEG_OFFSET, DATA_SEG_LIMIT, DATA_SEG_TYPE);
+	// vram segment
+	set_segment(&gdt[3], VRAM_SEG_OFFSET, VRAM_SEG_LIMIT, VRAM_SEG_TYPE);
+	// tss segment
+	set_segment(&gdt[4], TSS_SEG_OFFSET, TSS_SEG_LIMIT, TSS_SEG_TYPE);
+	// user code segment
+	set_segment(&gdt[5], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
+	// user data segment
+	set_segment(&gdt[6], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
+	// load gdt	
+	lgdt((uint)gdt, sizeof(gdt));
+}
 
 // setup kernel virtual memory for
 // a given page table.

@@ -23,6 +23,7 @@
 
 // trapasm.S
 extern uint vectors[];
+extern void trapret(void);
 
 // trap.c
 extern void trap_init(void);
@@ -72,8 +73,12 @@ extern void pgalloc_init(void);
 extern void page_free(uint);
 extern uint page_alloc(void);
 extern void kvm_setup(struct pte *);
+extern void gdt_init(void);
 
 // panic.c
 extern void panic(const char *);
+
+// string.c
+extern void strcpy(char *, char *);
 
 #endif

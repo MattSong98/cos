@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o
-	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o
+target/kernel.out: target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o
+	$(LD) $(LDFLAGS) -N -e init -Ttext 0x00000000 -o target/kernel.out target/head.o target/main.o target/memory.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o
 
 target/head.o: init/head.asm
 	nasm -f elf32 init/head.asm -o target/head.o
@@ -64,6 +64,9 @@ target/timer.o: dev/timer.c
 
 target/ide.o: dev/ide.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/ide.c -o target/ide.o
+
+target/string.o: lib/string.c
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c lib/string.c -o target/string.o
 
 ########################
 ###### ULTILITIES ######

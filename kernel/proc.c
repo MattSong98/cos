@@ -29,7 +29,7 @@ struct proc *
 proc_alloc()
 {
 	struct proc *p = NULL;
-	uchar *esp;
+	uchar *sp;
 
 	for (uint i = 0; i < PROCS; i++) {
 		if (proc_table.procs[i].state == UNUSED) {
@@ -44,20 +44,21 @@ proc_alloc()
 
 	// initialize kstack
 	p->kstack = kstacks[p->pid] + KSTACK_SIZE;
-	esp = p->kstack;
+	sp = p->kstack;
 
 	// initialize pgtab
 	p->pgtab = pgtabs[p->pid];	
 	kvm_setup(p->pgtab);
 
 	// initialize trapframe
-	esp -= sizeof(*(p->tf));
-	p->tf = (struct trapframe *) esp;
+	sp -= sizeof(*(p->tf));
+	p->tf = (struct trapframe *) sp;
 
 	// initialize context
-	esp -= sizeof(*(p->ctx));
-	p->ctx = (struct context *) esp;
-
+	sp -= sizeof(*(p->ctx));
+	p->ctx = (struct context *) sp;
+	p->ctx->eip = (uint) trapret;
+	
 	return p;
 }
 
@@ -66,7 +67,20 @@ proc_alloc()
 void 
 user_init()
 {
+	struct proc *p = proc_alloc();
+	if (!p) panic("user_init");
 	
+	// initialize the trivial
+	strcpy(p->name, "init");	
+	p->parent = NULL;
+
+	// setup trapframe
+	p->tf->cs = NULL;
+	p->tf->ds = NULL;
+	p->tf->es =	NULL;
+	p->tf->ss = NULL;
+	p->tf->fs = NULL;
+	p->tf->gs = NULL;
 }
 
 /* critical */

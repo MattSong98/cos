@@ -4,7 +4,7 @@
 
 int
 main(void) {
-
+	gdt_init();
 	console_init();
 	
 	kvm_init();
