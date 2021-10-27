@@ -64,6 +64,7 @@ trap(struct trapframe *tf)
 			break;
 		default:
 			// unknown
+			cprintf(&(tf->trapno), TYPE_HEX);
 			panic("trap");
 	}
 			

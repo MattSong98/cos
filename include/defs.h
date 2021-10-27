@@ -17,6 +17,7 @@
 #include "pic.h"
 #include "trap.h"
 #include "timer.h"
+#include "string.h"
 #include "proc.h"
 
 // Global Functions & Variables
@@ -24,6 +25,12 @@
 // trapasm.S
 extern uint vectors[];
 extern void trapret(void);
+
+// swtch.S
+extern void swtch(struct context **old, struct context *new);
+
+// main.c
+extern int main(void);
 
 // trap.c
 extern void trap_init(void);
@@ -74,11 +81,15 @@ extern void page_free(uint);
 extern uint page_alloc(void);
 extern void kvm_setup(struct pte *);
 extern void gdt_init(void);
+extern void uvm_setup(struct pte *, uchar *, uint);
+extern void tss_setup(ushort, uint);
+extern struct pte kpgtab[];
 
 // panic.c
 extern void panic(const char *);
 
 // string.c
 extern void strcpy(char *, char *);
-
+extern void *memset(void *, int, uint);
+extern void *memmove(void *, const void *, uint);
 #endif

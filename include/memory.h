@@ -32,14 +32,17 @@
 #define DATA_SEL	0x10	// DPL 0
 #define SCRN_SEL	0x18	// DPL 0
 #define TSS_SEL		0x20	// DPL 0
-#define UCODE_SEL	0x2E	// DPL 3
-#define UDATA_SEL	0x36	// DPL 3
+#define UCODE_SEL	0x2B	// DPL 3
+#define UDATA_SEL	0x33	// DPL 3
 
 // control registers
 #define CR0_PE	(1<<0) 
 #define CR0_WP	(1<<16)
 #define CR0_PG	(1<<31)
 #define CR4_PSE	(1<<4)
+
+// eflags 
+#define FL_IF	0x00000200
 
 // page size
 #define NORM_PAGE_SIZE (1<<12) // for align only
@@ -79,6 +82,48 @@ struct pte {
 
 struct phypage {
 	struct phypage *next;
+};
+
+// Task state segment format
+struct tss 
+{
+  uint link;         // Old ts selector
+  uint esp0;         // Stack pointers and segment selectors
+  ushort ss0;        // after an increase in privilege level
+  ushort padding1;
+  uint *esp1;
+  ushort ss1;
+  ushort padding2;
+  uint *esp2;
+  ushort ss2;
+  ushort padding3;
+  void *cr3;         // Page directory base
+  uint *eip;         // Saved state from last task switch
+  uint eflags;
+  uint eax;          // More saved state (registers)
+  uint ecx;
+  uint edx;
+  uint ebx;
+  uint *esp;
+  uint *ebp;
+  uint esi;
+  uint edi;
+  ushort es;         // Even more saved state (segment selectors)
+  ushort padding4;
+  ushort cs;
+  ushort padding5;
+  ushort ss;
+  ushort padding6;
+  ushort ds;
+  ushort padding7;
+  ushort fs;
+  ushort padding8;
+  ushort gs;
+  ushort padding9;
+  ushort ldt;
+  ushort padding10;
+  ushort t;          // Trap on task switch
+  ushort iomb;       // I/O map base address
 };
 #endif
 

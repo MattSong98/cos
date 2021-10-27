@@ -7,6 +7,9 @@ SYSLEN  equ 1024
 
 CODE_SEL equ 0x0008
 DATA_SEL equ 0x0010
+TMP_SEL equ 0x0018
+
+[bits 16]
 
     jmp BOOTSEG:go        
 go:  
@@ -62,11 +65,22 @@ en_prot:
     mov eax,cr0           ;; enable protection mode
     or eax,1
     mov cr0,eax           
-    jmp CODE_SEL:0        ;; here comes the stranger
+    jmp TMP_SEL:init     
+
+[bits 32]
+
+init:
+		mov ax, DATA_SEL
+		mov ds, ax
+		mov ss, ax
+		mov esp, 0xA0000
+		jmp CODE_SEL:0
 
 ; ###########################################
 ; ################# UTILS ###################
 ; ###########################################
+
+[bits 16]
 
 ;; @ax: segment-from
 ;; @bx: segment-to
@@ -131,58 +145,19 @@ f_rfs:
     pop word es
     ret
           
-; ##########################################
-; ################# TEST ###################
-; ##########################################
-
-print_ax:
-    mov bx, ax
-    and bx, 0x000f
-    mov si, 0x06
-    call f_pa_1
-    mov bx, ax
-    and bx, 0x00f0
-    shr bx, 4
-    mov si, 0x04
-    call f_pa_1
-    mov bx, ax
-    and bx, 0x0f00
-    shr bx, 8
-    mov si, 0x02
-    call f_pa_1
-    mov bx, ax
-    and bx, 0xf000
-    shr bx, 12
-    mov si, 0x00
-    call f_pa_1
-    jmp $
-f_pa_1:
-    cmp bx, 0x0009
-    ja f_pa_2
-    add bx, 48
-    mov cx, 0xb800
-    mov gs, cx
-    mov byte gs:[si], bl
-    ret  
-f_pa_2:    
-    add bx, 55
-    mov cx, 0xb800
-    mov gs, cx
-    mov byte gs:[si], bl
-    ret
-
 ; ###########################################
 ; ################## DATA ###################
 ; ###########################################
 
 gdt_48:
-    dw 3*8-1
+    dw 4*8-1
     dd INITSEG*16+gdt
 
 gdt:
     dw 0, 0, 0, 0
-    dw 0x07ff, 0x0000, 0x9a00, 0x00c0
-    dw 0x07ff, 0x0000, 0x9200, 0x00c0
+    dw 0xffff, 0x0000, 0x9a00, 0x00cf
+    dw 0xffff, 0x0000, 0x9200, 0x00cf
+    dw 0xffff, 0x0000, 0x9a09, 0x00cf
  
     times 510-($-$$) db 0   
     dw 0xaa55    

@@ -18,9 +18,8 @@ struct pte kpgtab[PTES];
 // allocable physical pages
 static struct phypage *free_page_list;
 
-// setup global descriptor table for both
-// kernel space & user space.
-// local descriptor table is not used.
+// tss
+struct tss ts;
 
 static void 
 set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
@@ -33,6 +32,44 @@ set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
 	p->type_11_8 = type >> 8;
 }
 
+static inline void
+flush_segr()
+{
+	asm volatile(
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%ds\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%es\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%ss\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%fs\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%gs\n\t"
+		:: "i" (DATA_SEL));
+}
+
+
+void 
+gdt_test() 
+{
+	cprintf(&(gdt[1]), TYPE_HEX);
+	cprintf((uint *)(&gdt[1])+1, TYPE_HEX);
+	cprintf(&(gdt[2]), TYPE_HEX);
+	cprintf((uint *)(&gdt[2])+1, TYPE_HEX);
+	cprintf(&(gdt[3]), TYPE_HEX);
+	cprintf((uint *)(&gdt[3])+1, TYPE_HEX);
+	cprintf(&(gdt[4]), TYPE_HEX);
+	cprintf((uint *)(&gdt[4])+1, TYPE_HEX);
+	cprintf(&(gdt[5]), TYPE_HEX);
+	cprintf((uint *)(&gdt[5])+1, TYPE_HEX);
+	cprintf(&(gdt[6]), TYPE_HEX);
+	cprintf((uint *)(&gdt[6])+1, TYPE_HEX);
+}
+
+// setup global descriptor table for both
+// kernel space & user space.
+// local descriptor table is not used.
 void 
 gdt_init()
 {
@@ -45,13 +82,21 @@ gdt_init()
 	// vram segment
 	set_segment(&gdt[3], VRAM_SEG_OFFSET, VRAM_SEG_LIMIT, VRAM_SEG_TYPE);
 	// tss segment
-	set_segment(&gdt[4], TSS_SEG_OFFSET, TSS_SEG_LIMIT, TSS_SEG_TYPE);
+	set_segment(&gdt[4], (uint) (&ts), TSS_SEG_LIMIT, TSS_SEG_TYPE);
 	// user code segment
 	set_segment(&gdt[5], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
 	// user data segment
 	set_segment(&gdt[6], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
 	// load gdt	
 	lgdt((uint)gdt, sizeof(gdt));
+	flush_segr();
+}
+
+void 
+tss_setup(ushort ss0, uint esp0)
+{
+	ts.ss0 = ss0;
+	ts.esp0 = esp0;
 }
 
 // setup kernel virtual memory for
@@ -89,6 +134,24 @@ kvm_init()
 		"movl %%eax, %%cr0\n\t"
 		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
 		: "eax" );	
+}
+
+// setup user space for initcode.S
+void
+uvm_setup(struct pte *pgtab, uchar *init, uint sz)
+{
+	if (sz >= PAGE_SIZE)
+		panic("uvm_setup");
+
+	uint pa = page_alloc();
+	uchar *mem = (uchar *) pa;
+	memset(mem, 0, PAGE_SIZE);
+	memmove(mem, init, sz);
+	pgtab[256].pte_p = 1;
+	pgtab[256].pte_w = 1;
+	pgtab[256].pte_u = 1;
+	pgtab[256].pte_ps = 1;
+	pgtab[256].pte_ad = pa >> 12;
 }
 
 // page allocator which allocates physical
