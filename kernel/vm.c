@@ -44,7 +44,7 @@ struct tss ts;
 
 //--------------------------
 //
-//    global variables
+//  function : setup gdt 
 //
 //--------------------------
 
@@ -110,8 +110,17 @@ tss_setup(ushort ss0, uint esp0)
 	ts.esp0 = esp0;
 }
 
+
+//--------------------------
+//
+//  function : setup vm 
+//
+//--------------------------
+
+
 // setup kernel virtual memory for
 // a given page table.
+
 void 
 kvm_setup(struct pte *pgtab)
 {
@@ -165,8 +174,17 @@ uvm_setup(struct pte *pgtab, uchar *init, uint sz)
 	pgtab[256].pte_ad = pa >> 12;
 }
 
+
+//-----------------------------
+//
+//  function : page allocator
+//
+//-----------------------------
+
+
 // page allocator which allocates physical
 // pages started from 4MiB to PHYSTOP
+
 void
 pgalloc_init()
 {
@@ -182,7 +200,9 @@ pgalloc_init()
 	free_page_list = (struct phypage *) (PAGE_SIZE);
 }
 
+
 // free a phypage at the given pa.
+
 void
 page_free(uint pa)
 {
@@ -202,8 +222,10 @@ page_free(uint pa)
 	free_page_list = p;
 }
 
+
 // alloc a phypage and return its pa.
 // run out of pages if it returns 0.
+
 uint
 page_alloc(void)
 {	

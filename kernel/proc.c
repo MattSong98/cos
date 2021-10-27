@@ -56,21 +56,12 @@ proc_alloc()
 	}
 	if (!p) return NULL;	// no proc available
 
-	// update state
-	p->state = EMBRYO;
-
-	// initialize kstack
-	sp = p->kstack + KSTACK_SIZE;
-
-	// initialize pgtab
-	kvm_setup(p->pgtab);
-
-	// initialize trapframe
-	sp -= sizeof(*(p->tf));
+	p->state = EMBRYO;	// update state
+	sp = p->kstack + KSTACK_SIZE;	// initialize kstack
+	kvm_setup(p->pgtab);	// initialize pgtab
+	sp -= sizeof(*(p->tf));	// initialize trapframe
 	p->tf = (struct trapframe *) sp;
-
-	// initialize context
-	sp -= sizeof(*(p->ctx));
+	sp -= sizeof(*(p->ctx));	// initialize context
 	p->ctx = (struct context *) sp;
 	p->ctx->eip = (uint) trapret;
 	
