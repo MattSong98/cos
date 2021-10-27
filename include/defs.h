@@ -13,7 +13,7 @@
 #include "kbd.h"
 #include "ide.h"
 #include "console.h"
-#include "memory.h"
+#include "vm.h"
 #include "pic.h"
 #include "trap.h"
 #include "timer.h"

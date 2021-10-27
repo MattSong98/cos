@@ -15,16 +15,7 @@ struct pte pgtabs[PROCS][PTES];
 uchar kstacks[PROCS][KSTACK_SIZE];
 
 /* shared */
-struct cpu {
-	const uint gdtr;	
-	const uint idtr;
-	const ushort tr;
-	uint cr3;
-	struct proc *loaded_proc;
-	struct tss ts;
-	struct gdt_desc gdt
-	struct context *scheduler_context;
-};
+struct context *scheduler_context;
 
 /* init */
 void 
@@ -34,30 +25,6 @@ proc_init()
 		proc_table.procs[i].state = UNUSED;
 		proc_table.procs[i].pid = i;
 	}
-}
-
-void debug(struct trapframe *tf) {
-	
-	cprintf(&(tf->edi), TYPE_HEX);	
-	cprintf(&(tf->esi), TYPE_HEX);	
-	cprintf(&(tf->ebp), TYPE_HEX);	
-	cprintf(&(tf->oesp), TYPE_HEX);	
-	cprintf(&(tf->ebx), TYPE_HEX);	
-	cprintf(&(tf->edx), TYPE_HEX);	
-	cprintf(&(tf->ecx), TYPE_HEX);	
-	cprintf(&(tf->eax), TYPE_HEX);	
-	cprintf("   segr   ", TYPE_STR);
-	cprintf(&(tf->gs), TYPE_HEX);	
-	cprintf(&(tf->fs), TYPE_HEX);	
-	cprintf(&(tf->es), TYPE_HEX);	
-	cprintf(&(tf->ds), TYPE_HEX);	
-	cprintf(&(tf->ss), TYPE_HEX);	
-	cprintf(&(tf->cs), TYPE_HEX);	
-	cprintf("   ots.   ", TYPE_STR);
-	cprintf(&(tf->eflags), TYPE_HEX);	
-	cprintf(&(tf->esp), TYPE_HEX);	
-	cprintf(&(tf->eip), TYPE_HEX);	
-	panic("debug10");
 }
 
 /* critical */
@@ -90,11 +57,6 @@ proc_alloc()
 	sp -= sizeof(*(p->tf));
 	p->tf = (struct trapframe *) sp;
 
-	//sp -= 4;
-	//*(uint *)sp = (uint) (sp + 4);
-	
-	//sp -= 4; // debug caller's ret
-	
 	// initialize context
 	sp -= sizeof(*(p->ctx));
 	p->ctx = (struct context *) sp;
@@ -230,13 +192,6 @@ sched()
 /* critical */
 void 
 kill()
-{
-
-}
-
-/* critical */
-void
-swich()
 {
 
 }

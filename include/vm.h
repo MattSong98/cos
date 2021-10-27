@@ -1,5 +1,5 @@
-#ifndef _MEMORY_H
-#define _MEMORY_H
+#ifndef _VM_H
+#define _VM_H
 
 #define GDT_SIZE 7
 

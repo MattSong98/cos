@@ -1,1 +1,1 @@
-target/trapasm.o: kernel/trapasm.S include/memory.h
+target/trapasm.o: kernel/trapasm.S include/vm.h

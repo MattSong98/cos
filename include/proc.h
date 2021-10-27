@@ -27,8 +27,9 @@ struct context
 struct proc 
 {
 	// uint sz;
-	struct pte *pgtab;
-	uchar *kstack;
+	__attribute__((__aligned__(NORM_PAGE_SIZE)))
+	struct pte pgtab[PTES];
+	uchar kstack[KSTACK_SIZE];
 	enum proc_state state;
 	int pid;
 	struct proc *parent;
@@ -39,10 +40,6 @@ struct proc
 	// struct file *ofile[NOFILE];
 	// struct inode *cwd;
 	char name[PROC_NAME_SIZE];
-};
-
-struct proc_list {
-	struct proc procs[PROCS];
 };
 
 #endif
