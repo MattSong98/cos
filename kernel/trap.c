@@ -17,6 +17,7 @@
 
 #include "defs.h"
 
+/* shared | read only */
 static struct gate_desc idt[IDT_SIZE];
 
 static void 
@@ -41,13 +42,16 @@ void
 trap(struct trapframe *tf) 
 {
 	if(tf->trapno == T_SYSCALL) {
-		// do nothing for now
+		syscall();
 		return;
 	}
 
 	switch (tf->trapno) {
 		case T_TIMER:
 			// do nothing for now
+			if (cpu.loaded == true) {
+				yield();
+			}
 			pic_send_eoi(IRQ_TIMER);
 			break;
 		case T_KBD:
@@ -64,7 +68,7 @@ trap(struct trapframe *tf)
 			break;
 		default:
 			// unknown
-			cprintf(&(tf->trapno), TYPE_HEX);
+			cprintln(&(tf->trapno), TYPE_HEX);
 			panic("trap");
 	}
 			

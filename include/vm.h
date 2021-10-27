@@ -8,7 +8,6 @@
 #define CODE_SEG_OFFSET		0
 #define DATA_SEG_OFFSET		0
 #define VRAM_SEG_OFFSET		0xb8000	
-#define TSS_SEG_OFFSET		0 // ?
 #define UCODE_SEG_OFFSET	(1<<30)	// 1GiB
 #define UDATA_SEG_OFFSET	(1<<30)	// 1GiB
 // limit
@@ -30,7 +29,7 @@
 #define NULL_SEL	0x00
 #define CODE_SEL	0x08	// DPL 0
 #define DATA_SEL	0x10	// DPL 0
-#define SCRN_SEL	0x18	// DPL 0
+#define VRAM_SEL	0x18	// DPL 0
 #define TSS_SEL		0x20	// DPL 0
 #define UCODE_SEL	0x2B	// DPL 3
 #define UDATA_SEL	0x33	// DPL 3

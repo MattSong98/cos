@@ -16,7 +16,7 @@ vram_write(uchar c, uchar atr, ushort pos)
 								"movw %0, %%gs:(%1)\n\t"
 								"pop %%gs\n\t"
 								:	// no output
-								: "r" (word), "D" (pos), "i" (SCRN_SEL)
+								: "r" (word), "D" (pos), "i" (VRAM_SEL)
 								: "eax");
 }
 
@@ -111,6 +111,16 @@ cprintf(const void *ptr, int type)
 		return;
 	}
 }
+
+void 
+cprintln(const void *ptr, int type) 
+{
+	cprintf(ptr, type);
+	while (pos % CGA_COL_SIZE != 0)
+		buf_write(' ');
+	flush();
+}
+
 
 void 
 console_intr(int c) 

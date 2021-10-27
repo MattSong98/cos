@@ -36,6 +36,9 @@ extern int main(void);
 extern void trap_init(void);
 extern void trap(struct trapframe *);
 
+// syscall.c
+extern void syscall(void);
+
 // pic.c
 extern void pic_init(void);
 extern void pic_enable_irq(uchar);
@@ -45,6 +48,7 @@ extern void pic_send_eoi(uchar);
 extern void console_init(void);
 extern void cprintf(const void *, int);
 extern void console_intr(int);
+extern void cprintln(const void *, int);
 
 // ide.c
 extern void ide_init(void);
@@ -61,6 +65,7 @@ extern int kbdgetc(void);
 extern void kbd_intr(void);
 
 // proc.c
+extern struct cpu cpu;
 extern void proc_init(void);
 extern struct proc *proc_alloc(void);
 extern void user_init(void);
@@ -75,6 +80,7 @@ extern void scheduler(void);
 extern void kill(void);
 
 // vm.c
+extern struct tss ts;
 extern void kvm_init(void);
 extern void pgalloc_init(void);
 extern void page_free(uint);

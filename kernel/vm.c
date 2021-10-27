@@ -5,21 +5,49 @@
 // of pages for user space processes.
 // Assume there is at least 1GiB space available.
 
+
 #include "defs.h"
 
-// gdt
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
+
+/* shared */
+
 struct seg_desc gdt[GDT_SIZE];
+
+
+/* shared */
 
 // page table should be aligned to a normal page
 // cause cr3 does not make use of the low 12 bits.
+
 __attribute__((__aligned__(NORM_PAGE_SIZE)))
 struct pte kpgtab[PTES];
 
+
+/* shared */
+
 // allocable physical pages
+
 static struct phypage *free_page_list;
 
-// tss
+
+/* shared */
+
 struct tss ts;
+
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
 
 static void 
 set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
@@ -49,23 +77,6 @@ flush_segr()
 		:: "i" (DATA_SEL));
 }
 
-
-void 
-gdt_test() 
-{
-	cprintf(&(gdt[1]), TYPE_HEX);
-	cprintf((uint *)(&gdt[1])+1, TYPE_HEX);
-	cprintf(&(gdt[2]), TYPE_HEX);
-	cprintf((uint *)(&gdt[2])+1, TYPE_HEX);
-	cprintf(&(gdt[3]), TYPE_HEX);
-	cprintf((uint *)(&gdt[3])+1, TYPE_HEX);
-	cprintf(&(gdt[4]), TYPE_HEX);
-	cprintf((uint *)(&gdt[4])+1, TYPE_HEX);
-	cprintf(&(gdt[5]), TYPE_HEX);
-	cprintf((uint *)(&gdt[5])+1, TYPE_HEX);
-	cprintf(&(gdt[6]), TYPE_HEX);
-	cprintf((uint *)(&gdt[6])+1, TYPE_HEX);
-}
 
 // setup global descriptor table for both
 // kernel space & user space.

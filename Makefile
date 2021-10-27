@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o -b binary target/initcode 
+target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o -b binary target/initcode 
 
 target/main.o: init/main.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -Iinclude -c init/main.c -o target/main.o
@@ -52,6 +52,9 @@ target/pic.o: dev/pic.c
 
 target/trap.o: kernel/trap.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/trap.c -o target/trap.o
+
+target/syscall.o: kernel/syscall.c
+	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/syscall.c -o target/syscall.o
 
 target/trapasm.o: kernel/trapasm.S
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/trapasm.S -o target/trapasm.o

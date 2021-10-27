@@ -7,6 +7,11 @@
 
 #define NULL 0
 
+typedef enum {
+	false,
+	true
+} bool;
+
 typedef unsigned int uint;
 typedef unsigned short ushort;
 typedef unsigned char uchar;

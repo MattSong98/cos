@@ -42,4 +42,10 @@ struct proc
 	char name[PROC_NAME_SIZE];
 };
 
+struct cpu {
+	bool loaded;
+	struct context *sched_ctx;
+	struct proc *proc;
+};
+
 #endif

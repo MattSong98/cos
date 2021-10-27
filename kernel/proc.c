@@ -1,33 +1,47 @@
 #include "defs.h"
 
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
+
 /* shared */
+
 struct {
 	struct proc procs[PROCS];
 } proc_table;
 
-/* shared */
-// page tables for procs
-__attribute__((__aligned__(NORM_PAGE_SIZE)))
-struct pte pgtabs[PROCS][PTES];
 
 /* shared */
-// kernel stacks for procs
-uchar kstacks[PROCS][KSTACK_SIZE];
 
-/* shared */
-struct context *scheduler_context;
+struct cpu cpu;
+
+
+//--------------------------
+//
+//        functions
+//
+//--------------------------
+
 
 /* init */
+
 void 
 proc_init()
 {
+	ltr(TSS_SEL);
 	for (uint i = 0; i < PROCS; i++) {
 		proc_table.procs[i].state = UNUSED;
 		proc_table.procs[i].pid = i;
 	}
 }
 
+
 /* critical */
+
 struct proc *
 proc_alloc()
 {
@@ -46,11 +60,9 @@ proc_alloc()
 	p->state = EMBRYO;
 
 	// initialize kstack
-	p->kstack = kstacks[p->pid] + KSTACK_SIZE;
-	sp = p->kstack;
+	sp = p->kstack + KSTACK_SIZE;
 
 	// initialize pgtab
-	p->pgtab = pgtabs[p->pid];	
 	kvm_setup(p->pgtab);
 
 	// initialize trapframe
@@ -65,8 +77,11 @@ proc_alloc()
 	return p;
 }
 
+
 /* init */
+
 // create first proc: init
+
 void 
 user_init()
 {
@@ -91,20 +106,21 @@ user_init()
 	p->tf->ss = UDATA_SEL;
 	p->tf->fs = UDATA_SEL;
 	p->tf->gs = UDATA_SEL;
-	// p->tf->eflags = FL_IF;
+	p->tf->eflags = FL_IF;
 	p->tf->esp = PAGE_SIZE;
 	p->tf->eip = 0;
 
 	p->state = RUNNABLE;
 }
 
+
 static void
 proc_load(struct proc *p)
 {
-	tss_setup(DATA_SEL, (uint) p->kstack);
-	ltr(TSS_SEL);
+	tss_setup(DATA_SEL, (uint) (p->kstack + KSTACK_SIZE));
 	lcr3((uint) p->pgtab);
 }
+
 
 static void 
 proc_unload()
@@ -112,33 +128,51 @@ proc_unload()
 	lcr3((uint) kpgtab);
 }
 
+
 /* critical */
+
 void 
 scheduler() 
-{	
-	struct proc *p;
-	for (;;) {
-		// sti();
+{
+	cpu.loaded = false;
 
+	for (;;) {
 		for (int i = 0; i < PROCS; i++) {
-			if (proc_table.procs[i].state != RUNNABLE) 
+			if (proc_table.procs[i].state != RUNNABLE) {
 				continue;
-			p = &proc_table.procs[i];
-			proc_load(p);
-			p->state = RUNNING;
-			// here it goes wrong	
-			swtch(&scheduler_context, p->ctx);
+			}	
+		
+			cpu.loaded = true;	
+			cpu.proc = &proc_table.procs[i];
+			proc_load(cpu.proc);
+			cpu.proc->state = RUNNING;
+			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
+			cpu.proc->state = RUNNABLE;
 			proc_unload();
+			cpu.proc = NULL;
+			cpu.loaded = false;
 		}
 	}
 }
 
+
 /* critical */
+
+void
+yield()
+{
+	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
+}
+
+
+/* critical */
+
 void
 fork()
 {
 
 }
+
 
 /* critical */
 void
@@ -157,13 +191,6 @@ exit()
 /* critical */
 void
 wait()
-{
-
-}
-
-/* critical */
-void
-yield()
 {
 
 }

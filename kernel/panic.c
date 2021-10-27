@@ -3,7 +3,7 @@
 void 
 panic(const char *err) 
 {
-	cprintf(err, TYPE_STR);
+	cprintln(err, TYPE_STR);
 	// spin
 	for(;;);
 }	
