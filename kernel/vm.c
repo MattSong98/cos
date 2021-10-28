@@ -59,24 +59,6 @@ set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
 }
 
 
-static inline void
-flush_segr()
-{
-	asm volatile(
-		"mov %0, %%eax\n\t"
-		"mov %%eax, %%ds\n\t"
-		"mov %0, %%eax\n\t"
-		"mov %%eax, %%es\n\t"
-		"mov %0, %%eax\n\t"
-		"mov %%eax, %%ss\n\t"
-		"mov %0, %%eax\n\t"
-		"mov %%eax, %%fs\n\t"
-		"mov %0, %%eax\n\t"
-		"mov %%eax, %%gs\n\t"
-		:: "i" (DATA_SEL));
-}
-
-
 // setup global descriptor table for both
 // kernel space & user space.
 // local descriptor table is not used.
@@ -91,9 +73,6 @@ gdt_init()
 	set_segment(&gdt[4], (uint) (&(cpu.ts)), TSS_SEG_LIMIT, TSS_SEG_TYPE);
 	set_segment(&gdt[5], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
 	set_segment(&gdt[6], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
-	lgdt((uint)gdt, sizeof(gdt));
-	ltr(TSS_SEL);
-	flush_segr();
 }
 
 
@@ -108,17 +87,6 @@ void
 kvm_init() 
 {
 	kvm_setup(kpgtab);
-
-	asm volatile (	
-		"movl %%cr4, %%eax\n\t"	// turn on page size extension
-		"orl %1, %%eax\n\t"
-		"movl %%eax, %%cr4\n\t"
-		"movl %0, %%cr3\n\t"	// set page directory
-		"movl %%cr0, %%eax\n\t"	// turn on paging
-		"orl %2, %%eax\n\t"
-		"movl %%eax, %%cr0\n\t"
-		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
-		: "eax" );	
 }
 
 

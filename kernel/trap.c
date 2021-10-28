@@ -28,7 +28,7 @@
 
 /* read only */
 
-static struct gate_desc idt[IDT_SIZE];
+struct gate_desc idt[IDT_SIZE];
 
 
 /* shared */
@@ -63,7 +63,6 @@ trap_init()
 		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
 	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
-	lidt((uint)idt, sizeof(idt));
 }
 
 

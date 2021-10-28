@@ -1,8 +1,23 @@
 #include "defs.h"
 
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
+
 static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
 static ushort pos;
+
+
+//--------------------------
+//
+//    function : 
+//
+//--------------------------
 
 static void 
 vram_write(uchar c, uchar atr, ushort pos) 
@@ -68,7 +83,6 @@ console_init()
 		atr[i] = CGA_STD_ATR;
 	}
 	flush();
-	kbd_init();
 }
 
 void 

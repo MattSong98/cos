@@ -5,9 +5,9 @@ INITSEG equ 0x9000
 SYSSEG  equ 0x1000
 SYSLEN  equ 1024
 
-CODE_SEL equ 0x0008
-DATA_SEL equ 0x0010
-TMP_SEL equ 0x0018
+TMP	 equ 0x0008
+CODE equ 0x0010
+DATA equ 0x0018
 
 [bits 16]
 
@@ -64,17 +64,17 @@ en_prot:
     out 0x92, al           
     mov eax,cr0           ;; enable protection mode
     or eax,1
-    mov cr0,eax           
-    jmp TMP_SEL:init     
+    mov cr0,eax 
+    jmp TMP:init     
 
 [bits 32]
 
 init:
-		mov ax, DATA_SEL
+		mov ax, DATA
 		mov ds, ax
 		mov ss, ax
 		mov esp, 0xA0000
-		jmp CODE_SEL:0
+		jmp CODE:0
 
 ; ###########################################
 ; ################# UTILS ###################
@@ -155,9 +155,9 @@ gdt_48:
 
 gdt:
     dw 0, 0, 0, 0
+    dw 0xffff, 0x0000, 0x9a09, 0x00cf
     dw 0xffff, 0x0000, 0x9a00, 0x00cf
     dw 0xffff, 0x0000, 0x9200, 0x00cf
-    dw 0xffff, 0x0000, 0x9a09, 0x00cf
  
     times 510-($-$$) db 0   
     dw 0xaa55    

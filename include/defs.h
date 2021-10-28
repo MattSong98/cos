@@ -38,6 +38,7 @@ extern void acquire(lock *);
 extern void release(lock *);
 
 // trap.c
+extern struct gate_desc idt[IDT_SIZE];	// variable
 extern void trap_init(void);
 extern void trap(struct trapframe *);
 
@@ -70,7 +71,8 @@ extern int kbdgetc(void);
 extern void kbd_intr(void);
 
 // proc.c
-extern struct cpu cpu;	// variable
+extern struct cpu cpu;				// variable
+extern void cpu_init(void);
 extern void proc_init(void);
 extern struct proc *proc_alloc(void);
 extern void user_init(void);
@@ -85,7 +87,8 @@ extern void scheduler(void);
 extern void kill(void);
 
 // vm.c
-extern struct pte kpgtab[];	// variable
+extern struct seg_desc gdt[GDT_SIZE];	// variable
+extern struct pte kpgtab[];		// variable
 extern void kvm_init(void);
 extern void palloc_init(void);
 extern void page_free(uint);

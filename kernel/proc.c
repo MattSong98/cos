@@ -56,11 +56,49 @@ proc_init()
 //--------------------------
 
 
+static inline void
+flush_segr()
+{
+	asm volatile(
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%ds\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%es\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%ss\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%fs\n\t"
+		"mov %0, %%eax\n\t"
+		"mov %%eax, %%gs\n\t"
+		:: "i" (DATA_SEL));
+}
+
+
+static void
+enable_paging()
+{
+	asm volatile (	
+		"movl %%cr4, %%eax\n\t"	// turn on page size extension
+		"orl %1, %%eax\n\t"
+		"movl %%eax, %%cr4\n\t"
+		"movl %0, %%cr3\n\t"	// set page directory
+		"movl %%cr0, %%eax\n\t"	// turn on paging
+		"orl %2, %%eax\n\t"
+		"movl %%eax, %%cr0\n\t"
+		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
+		: "eax" );	
+}
+
+
 void 
 cpu_init()
 {
+	lgdt((uint) gdt, sizeof(gdt));	// laod system regs
+	lidt((uint) idt, sizeof(idt));
 	ltr(TSS_SEL);
-	cpu.proc = NULL;
+	flush_segr();	// flush segment regs
+	enable_paging();	// enable paging
+	cpu.proc = NULL;	// prepare for proc to load in
 	cpu.loaded = false;
 }
 
@@ -70,6 +108,7 @@ cpu_init()
 //   functions : critical 
 //
 //--------------------------
+
 
 static void
 forkret()
@@ -116,6 +155,7 @@ proc_alloc()
 //    functions : init
 //
 //--------------------------
+
 
 // create first proc: init
 
@@ -204,6 +244,7 @@ scheduler()
 //
 //--------------------------
 
+
 // only three functions will trigger swtch
 // namely yield(), sleep() & exit().
 
@@ -236,6 +277,7 @@ exit()
 //   functions : critical 
 //
 //--------------------------
+
 
 /* critical */
 void 
