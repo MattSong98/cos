@@ -1,5 +1,5 @@
 // Attension, most but not all of keys are mapped.
-// Unexpected results might produce due to unmapped keys.
+// Unexpected results might be produced due to unmapped keys.
 // To keep it simple, state of kbd is captured by variable 
 // "shift", which only have four valid values: NORMAL (0b0000), 
 // SHIFT (0b0001), CONTROL (0b0010) and SHIFT & CONTROL (0b0011).
@@ -17,12 +17,25 @@
 
 #include "defs.h"
 
+
+//--------------------------
+//
+//       variables
+//
+//--------------------------
+
+
+/* read only */
+
 static uchar shiftcode[256] =
 {
   [0x1D] CTL,
   [0x2A] SHIFT,
   [0x36] SHIFT
 };
+
+
+/* read only */
 
 static uchar normalmap[256] =
 {
@@ -39,6 +52,9 @@ static uchar normalmap[256] =
   '2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,   // 0x50
 };
 
+
+/* read only */
+
 static uchar shiftmap[256] =
 {
   NO,   033,  '!',  '@',  '#',  '$',  '%',  '^',  // 0x00
@@ -54,6 +70,9 @@ static uchar shiftmap[256] =
   '2',  '3',  '0',  '.',  NO,   NO,   NO,   NO,   // 0x50
 };
 
+
+/* read only */
+
 static uchar ctlmap[256] =
 {
   NO,      NO,      NO,      NO,      NO,      NO,      NO,      NO,
@@ -64,6 +83,14 @@ static uchar ctlmap[256] =
   NO,      NO,      NO,      C('\\'), C('Z'),  C('X'),  C('C'),  C('V'),
   C('B'),  C('N'),  C('M'),  NO,      NO,      C('/'),  NO,      NO,
 };
+
+
+//--------------------------
+//
+//    function : init   
+//
+//--------------------------
+
 
 static void 
 ps2_init() 
@@ -107,6 +134,7 @@ ps2_init()
 	outb(0x64, 0xAE);
 }
 
+
 void 
 kbd_init(void) 
 {
@@ -114,8 +142,16 @@ kbd_init(void)
 	pic_enable_irq(IRQ_KBD);
 }
 
-int 
-kbdgetc(void) 
+
+//--------------------------
+//
+// function : non-critical 
+//
+//--------------------------
+
+
+static int 
+kbdgetc() 
 {
 	static uchar shift;
 	static uchar *charcode[4] = {

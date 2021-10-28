@@ -21,7 +21,7 @@
 /* shared */
 
 struct {
-	lock *lock;
+	lock lock;
 	struct proc procs[PROCS];
 } ptable;
 
@@ -41,7 +41,7 @@ struct cpu cpu;
 void 
 proc_init()
 {
-	lock_init(ptable.lock);
+	lock_init(&ptable.lock);
 	for (uint i = 0; i < PROCS; i++) {
 		ptable.procs[i].state = UNUSED;
 		ptable.procs[i].pid = i;
@@ -69,8 +69,9 @@ flush_segr()
 		"mov %0, %%eax\n\t"
 		"mov %%eax, %%fs\n\t"
 		"mov %0, %%eax\n\t"
-		"mov %%eax, %%gs\n\t"
-		:: "i" (DATA_SEL));
+		"mov %%eax, %%gs\n\t" ::
+		"i" (DATA_SEL) :
+		"eax" );
 }
 
 
@@ -84,9 +85,9 @@ enable_paging()
 		"movl %0, %%cr3\n\t"	// set page directory
 		"movl %%cr0, %%eax\n\t"	// turn on paging
 		"orl %2, %%eax\n\t"
-		"movl %%eax, %%cr0\n\t"
-		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
-		: "eax" );	
+		"movl %%eax, %%cr0\n\t" ::
+		"r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP) :
+		"eax" );	
 }
 
 
@@ -100,6 +101,7 @@ cpu_init()
 	enable_paging();	// enable paging
 	cpu.proc = NULL;	// prepare for proc to load in
 	cpu.loaded = false;
+	cpu.sched_ctx = NULL;
 }
 
 
@@ -113,7 +115,7 @@ cpu_init()
 static void
 forkret()
 {
-	release(ptable.lock);	
+	release(&ptable.lock);	
 }
 
 struct proc *
@@ -122,7 +124,7 @@ proc_alloc()
 	struct proc *p = NULL;
 	uchar *sp;
 
-	acquire(ptable.lock);
+	acquire(&ptable.lock);
 	for (uint i = 0; i < PROCS; i++) {
 		if (ptable.procs[i].state == UNUSED) {
 			p = &(ptable.procs[i]);
@@ -130,11 +132,11 @@ proc_alloc()
 		}
 	}
 	if (!p) {
-		release(ptable.lock);
+		release(&ptable.lock);
 		return NULL;	// no proc available
 	}
 	p->state = EMBRYO;	// lock p
-	release(ptable.lock);
+	release(&ptable.lock);
 
 	sp = p->kstack + KSTACK_SIZE;	// initialize kstack
 	kvm_setup(p->pgtab);	// initialize pgtab
@@ -223,7 +225,7 @@ void
 scheduler() 
 {
 	for (;;) {
-		acquire(ptable.lock);
+		acquire(&ptable.lock);
 		for (int i = 0; i < PROCS; i++) {
 			if (ptable.procs[i].state != RUNNABLE) {
 				continue;
@@ -233,7 +235,7 @@ scheduler()
 			cprintln("swtich", TYPE_STR);
 			proc_unload();
 		}
-		release(ptable.lock);
+		release(&ptable.lock);
 	}
 }
 
@@ -251,10 +253,10 @@ scheduler()
 void
 yield()
 {
-	acquire(ptable.lock);
+	acquire(&ptable.lock);
 	cpu.proc->state = RUNNABLE;
 	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
-	release(ptable.lock);
+	release(&ptable.lock);
 }
 
 

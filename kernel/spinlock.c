@@ -1,20 +1,20 @@
 #include "defs.h"
 
 void 
-lock_init(lock *l) 
+lock_init(lock *lock) 
 {
-	*l = unlocked;	
+	*lock = unlocked;	
 }
 
 void 
-acquire(lock *l)
+acquire(lock *lock)
 {
-	while (xchg(l, locked) == locked); 
+	while (xchg(lock, locked) == locked);
 }
 
 void 
-release(lock *l) 
+release(lock *lock) 
 {
-	if (xchg(l, unlocked) == unlocked)
+	if (xchg(lock, unlocked) == unlocked)
 		panic("release");
 }

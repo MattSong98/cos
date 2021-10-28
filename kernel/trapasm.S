@@ -264,16 +264,19 @@ vector46:
   jmp alltraps
 .globl vector47
 vector47:
+	cli
   pushl $0
   pushl $47
   jmp alltraps
 .globl vector48
 vector48:
+	cli
   pushl $0
   pushl $48
   jmp alltraps
 .globl vector49
 vector49:
+	cli
   pushl $0
   pushl $49
   jmp alltraps

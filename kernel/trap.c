@@ -34,7 +34,7 @@ struct gate_desc idt[IDT_SIZE];
 /* shared */
 
 static struct {
-	lock *lock;
+	lock lock;
 	uint count;
 } tick;
 
@@ -56,12 +56,11 @@ set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
 
 
 void 
-trap_init()
+idt_init()
 {
-	lock_init(tick.lock);
-	for (ushort i = 0; i < IDT_SIZE; i++) {
+	lock_init(&tick.lock);
+	for (ushort i = 0; i < IDT_SIZE; i++) 
 		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
-	}
 	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
 }
 
@@ -86,13 +85,13 @@ trap(struct trapframe *tf)
 		case T_TIMER:
 			if (cpu.loaded == false)	// cpu must have had proc loaded
 				panic("trap: timer");		// since 'cli' after interrupted.
-			acquire(tick.lock);
-			if (tick.count++ > 5) {
+			acquire(&tick.lock);
+			if (tick.count++ > 1) {
 				tick.count = 0;
-				release(tick.lock);
+				release(&tick.lock);
 				yield();
 			} else {
-				release(tick.lock);
+				release(&tick.lock);
 			}
 			pic_send_eoi(IRQ_TIMER);
 			break;

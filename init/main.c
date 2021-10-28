@@ -17,19 +17,20 @@
 
 int
 main(void) {
+	
+	console_init();
+	
 	gdt_init();
-	trap_init();
+	idt_init();
 	kvm_init();
 	cpu_init();
-	console_init();
-
-	palloc_init();
 
 	pic_init();
 	timer_init();
 	kbd_init();
 	ide_init();
 	
+	palloc_init();
 	proc_init();
 	user_init();
 	scheduler();

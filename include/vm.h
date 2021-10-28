@@ -1,26 +1,23 @@
 #ifndef _VM_H
 #define _VM_H
 
-#define GDT_SIZE 7
+#define GDT_SIZE 6
 
 // segment descriptor details
 // offset
 #define CODE_SEG_OFFSET		0
 #define DATA_SEG_OFFSET		0
-#define VRAM_SEG_OFFSET		0xb8000	
 #define UCODE_SEG_OFFSET	(1<<30)	// 1GiB
 #define UDATA_SEG_OFFSET	(1<<30)	// 1GiB
 // limit
 #define CODE_SEG_LIMIT	((1<<30)/(1<<12)-1) // 1GiB/4KiB - 1
 #define DATA_SEG_LIMIT	((1<<30)/(1<<12)-1)	// 1GiB/4KiB - 1
-#define VRAM_SEG_LIMIT	(4-1) // 16KiB/4KiB - 1
 #define TSS_SEG_LIMIT		0	// (< 4KiB) 4KiB/4KiB - 1
 #define UCODE_SEG_LIMIT	((3<<30)/(1<<12)-1)	// 3GiB/4KiB - 1
 #define UDATA_SEG_LIMIT ((3<<30)/(1<<12)-1)	// 3GiB/4KiB - 1
 // type
 #define CODE_SEG_TYPE		0xC9A	// DPL 0
 #define DATA_SEG_TYPE		0xC92	// DPL 0
-#define VRAM_SEG_TYPE		0xC92	// DPL 0
 #define TSS_SEG_TYPE		0x889	// DPL 0
 #define UCODE_SEG_TYPE	0xCFA	// DPL 3
 #define UDATA_SEG_TYPE	0xCF2	// DPL 3
@@ -29,10 +26,9 @@
 #define NULL_SEL	0x00
 #define CODE_SEL	0x08	// DPL 0
 #define DATA_SEL	0x10	// DPL 0
-#define VRAM_SEL	0x18	// DPL 0
-#define TSS_SEL		0x20	// DPL 0
-#define UCODE_SEL	0x2B	// DPL 3
-#define UDATA_SEL	0x33	// DPL 3
+#define TSS_SEL		0x18	// DPL 0
+#define UCODE_SEL	0x23	// DPL 3
+#define UDATA_SEL	0x2B	// DPL 3
 
 // control registers
 #define CR0_PE	(1<<0) 

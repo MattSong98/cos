@@ -35,7 +35,7 @@ struct pte kpgtab[PTES];
 // allocable physical pages
 
 static struct {
-	lock *lock;
+	lock lock;
 	struct phypage *head;
 } plist;
 
@@ -69,10 +69,9 @@ gdt_init()
 	set_segment(&gdt[0], 0, 0, 0);
 	set_segment(&gdt[1], CODE_SEG_OFFSET, CODE_SEG_LIMIT, CODE_SEG_TYPE);
 	set_segment(&gdt[2], DATA_SEG_OFFSET, DATA_SEG_LIMIT, DATA_SEG_TYPE);
-	set_segment(&gdt[3], VRAM_SEG_OFFSET, VRAM_SEG_LIMIT, VRAM_SEG_TYPE);
-	set_segment(&gdt[4], (uint) (&(cpu.ts)), TSS_SEG_LIMIT, TSS_SEG_TYPE);
-	set_segment(&gdt[5], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
-	set_segment(&gdt[6], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
+	set_segment(&gdt[3], (uint) (&(cpu.ts)), TSS_SEG_LIMIT, TSS_SEG_TYPE);
+	set_segment(&gdt[4], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
+	set_segment(&gdt[5], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
 }
 
 
@@ -153,7 +152,7 @@ kvm_setup(struct pte *pgtab)
 void
 palloc_init()
 {
-	lock_init(plist.lock);	
+	lock_init(&plist.lock);	
 	for (uint i = 1; i < PHY_PAGES - 1; i++) {
 		struct phypage *cur = (struct phypage *) (PAGE_SIZE * i);
 		cur->next = (struct phypage *) (PAGE_SIZE * (i+1));
@@ -176,7 +175,7 @@ palloc_init()
 void
 page_free(uint pa)
 {
-	acquire(plist.lock);
+	acquire(&plist.lock);
 	if (pa % PAGE_SIZE != 0 || (pa / PAGE_SIZE) >= PHY_PAGES)
 		panic("page_free: not valid");
 	if (pa == 0)
@@ -189,7 +188,7 @@ page_free(uint pa)
 	struct phypage *p = (struct phypage *) pa;
 	p->next = plist.head;
 	plist.head = p;
-	release(plist.lock);
+	release(&plist.lock);
 }
 
 
@@ -205,12 +204,12 @@ page_free(uint pa)
 uint
 page_alloc(void)
 {	
-	acquire(plist.lock);
+	acquire(&plist.lock);
 	if (plist.head == NULL)
 		panic("page_alloc: out of pages");
 	uint pa = (uint) plist.head;
 	plist.head = plist.head->next;
-	release(plist.lock);
+	release(&plist.lock);
 	return pa;
 }
 

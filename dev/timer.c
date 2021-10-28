@@ -2,7 +2,16 @@
 // Only used on uniprocessors;
 // SMP machines use the local APIC timer.
 
+
 #include "defs.h"
+
+
+//--------------------------
+//
+//   function : init    
+//
+//--------------------------
+
 
 void
 timer_init(void)

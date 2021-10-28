@@ -11,7 +11,6 @@
 /* shared */
 
 struct cga {
-	lock lock;
 	uchar buf[CGA_SIZE];
 	uchar atr[CGA_SIZE];
 	uint pos;
@@ -28,7 +27,6 @@ struct cga {
 static void 
 flush() 
 {
-	acquire(&cga.lock);
 	for (uint pos = 0; pos < CGA_SIZE; pos++) {
 		ushort word = (ushort) cga.buf[pos] + (((ushort) cga.atr[pos]) << 8);
 		asm volatile (
@@ -41,14 +39,13 @@ flush()
 	outb(0x3D5, (uchar) (cga.pos & 0xFF));
 	outb(0x3D4, 0x0E);
 	outb(0x3D5, (uchar) ((cga.pos >> 8) & 0xFF));
-	release(&cga.lock);
 }
 
 
 void 
 console_init() 
 {
-	lock_init(&cga.lock);
+	lock_init(cga.lock);
 	cga.pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		cga.buf[i] = ' ';
@@ -81,12 +78,10 @@ scroll_up()
 static void 
 buf_write(uchar c) 
 {
-	acquire(&cga.lock);
 	if (cga.pos == CGA_SIZE - 1) {
 		scroll_up();
 	}
 	cga.buf[cga.pos++] = c;
-	release(&cga.lock);
 }
 
 

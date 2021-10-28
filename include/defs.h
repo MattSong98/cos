@@ -39,7 +39,7 @@ extern void release(lock *);
 
 // trap.c
 extern struct gate_desc idt[IDT_SIZE];	// variable
-extern void trap_init(void);
+extern void idt_init(void);
 extern void trap(struct trapframe *);
 
 // syscall.c
@@ -67,7 +67,6 @@ extern void timer_init(void);
 
 // kbd.c
 extern void kbd_init(void);
-extern int kbdgetc(void);
 extern void kbd_intr(void);
 
 // proc.c

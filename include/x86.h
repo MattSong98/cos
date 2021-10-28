@@ -101,8 +101,8 @@ stosl(void *addr, int data, int cnt)
                "memory", "cc");
 }
 
-static inline int
-xchg(void *addr, int newval)
+static inline int 
+xchg(volatile void *addr, int newval)
 {
   int result;
 
