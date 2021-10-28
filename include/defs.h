@@ -23,7 +23,7 @@
 // Global Functions & Variables
 
 // trapasm.S
-extern uint vectors[];
+extern uint vectors[];	// variable
 extern void trapret(void);
 
 // swtch.S
@@ -31,6 +31,11 @@ extern void swtch(struct context **old, struct context *new);
 
 // main.c
 extern int main(void);
+
+// spinlock.c
+extern void lock_init(lock *);
+extern void acquire(lock *);
+extern void release(lock *);
 
 // trap.c
 extern void trap_init(void);
@@ -65,7 +70,7 @@ extern int kbdgetc(void);
 extern void kbd_intr(void);
 
 // proc.c
-extern struct cpu cpu;
+extern struct cpu cpu;	// variable
 extern void proc_init(void);
 extern struct proc *proc_alloc(void);
 extern void user_init(void);
@@ -80,16 +85,15 @@ extern void scheduler(void);
 extern void kill(void);
 
 // vm.c
-extern struct tss ts;
+extern struct pte kpgtab[];	// variable
 extern void kvm_init(void);
-extern void pgalloc_init(void);
+extern void palloc_init(void);
 extern void page_free(uint);
 extern uint page_alloc(void);
 extern void kvm_setup(struct pte *);
 extern void gdt_init(void);
 extern void uvm_setup(struct pte *, uchar *, uint);
 extern void tss_setup(ushort, uint);
-extern struct pte kpgtab[];
 
 // panic.c
 extern void panic(const char *);
@@ -98,4 +102,5 @@ extern void panic(const char *);
 extern void strcpy(char *, char *);
 extern void *memset(void *, int, uint);
 extern void *memmove(void *, const void *, uint);
+
 #endif

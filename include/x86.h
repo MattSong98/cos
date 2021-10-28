@@ -101,4 +101,17 @@ stosl(void *addr, int data, int cnt)
                "memory", "cc");
 }
 
+static inline int
+xchg(void *addr, int newval)
+{
+  int result;
+
+  // The + in "+m" denotes a read-modify-write operand.
+  asm volatile("lock; xchgl %0, %1" :
+               "+m" (*(int *)addr), "=a" (result) :
+               "1" (newval) :
+               "cc");
+  return result;
+}
+
 #endif

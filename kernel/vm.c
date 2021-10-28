@@ -16,14 +16,14 @@
 //--------------------------
 
 
-/* shared */
+/* read only */
 
 struct seg_desc gdt[GDT_SIZE];
 
 
-/* shared */
+/* read only */
 
-// page table should be aligned to a normal page
+// page table should be aligned to the boundary of a normal page
 // cause cr3 does not make use of the low 12 bits.
 
 __attribute__((__aligned__(NORM_PAGE_SIZE)))
@@ -34,17 +34,15 @@ struct pte kpgtab[PTES];
 
 // allocable physical pages
 
-static struct phypage *free_page_list;
-
-
-/* shared */
-
-struct tss ts;
+static struct {
+	lock *lock;
+	struct phypage *head;
+} plist;
 
 
 //--------------------------
 //
-//  function : setup gdt 
+//     function : init
 //
 //--------------------------
 
@@ -59,6 +57,7 @@ set_segment(struct seg_desc *p, uint offset, uint limit, uint type) {
 	p->type_7_0 = type & 0xFF;
 	p->type_11_8 = type >> 8;
 }
+
 
 static inline void
 flush_segr()
@@ -81,45 +80,83 @@ flush_segr()
 // setup global descriptor table for both
 // kernel space & user space.
 // local descriptor table is not used.
+
 void 
 gdt_init()
 {
-	// null segment
 	set_segment(&gdt[0], 0, 0, 0);
-	// code segment
 	set_segment(&gdt[1], CODE_SEG_OFFSET, CODE_SEG_LIMIT, CODE_SEG_TYPE);
-	// data segment
 	set_segment(&gdt[2], DATA_SEG_OFFSET, DATA_SEG_LIMIT, DATA_SEG_TYPE);
-	// vram segment
 	set_segment(&gdt[3], VRAM_SEG_OFFSET, VRAM_SEG_LIMIT, VRAM_SEG_TYPE);
-	// tss segment
-	set_segment(&gdt[4], (uint) (&ts), TSS_SEG_LIMIT, TSS_SEG_TYPE);
-	// user code segment
+	set_segment(&gdt[4], (uint) (&(cpu.ts)), TSS_SEG_LIMIT, TSS_SEG_TYPE);
 	set_segment(&gdt[5], UCODE_SEG_OFFSET, UCODE_SEG_LIMIT, UCODE_SEG_TYPE);
-	// user data segment
 	set_segment(&gdt[6], UDATA_SEG_OFFSET, UDATA_SEG_LIMIT, UDATA_SEG_TYPE);
-	// load gdt	
 	lgdt((uint)gdt, sizeof(gdt));
+	ltr(TSS_SEL);
 	flush_segr();
 }
 
-void 
-tss_setup(ushort ss0, uint esp0)
+
+//--------------------------
+//
+//     function : init
+//
+//--------------------------
+
+
+void
+kvm_init() 
 {
-	ts.ss0 = ss0;
-	ts.esp0 = esp0;
+	kvm_setup(kpgtab);
+
+	asm volatile (	
+		"movl %%cr4, %%eax\n\t"	// turn on page size extension
+		"orl %1, %%eax\n\t"
+		"movl %%eax, %%cr4\n\t"
+		"movl %0, %%cr3\n\t"	// set page directory
+		"movl %%cr0, %%eax\n\t"	// turn on paging
+		"orl %2, %%eax\n\t"
+		"movl %%eax, %%cr0\n\t"
+		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
+		: "eax" );	
 }
 
 
 //--------------------------
 //
-//  function : setup vm 
+//     function : init
 //
 //--------------------------
 
+// setup user space for initcode.S
+
+void
+uvm_setup(struct pte *pgtab, uchar *init, uint sz)
+{
+	if (sz >= PAGE_SIZE)
+		panic("uvm_setup");
+
+	uint pa = page_alloc();
+	uchar *mem = (uchar *) pa;
+	memset(mem, 0, PAGE_SIZE);
+	memmove(mem, init, sz);
+	pgtab[KVM_PAGES].pte_p = 1;
+	pgtab[KVM_PAGES].pte_w = 1;
+	pgtab[KVM_PAGES].pte_u = 1;
+	pgtab[KVM_PAGES].pte_ps = 1;
+	pgtab[KVM_PAGES].pte_ad = pa >> 12;
+}
+
+
+//--------------------------
+//
+//  function : critical
+//
+//--------------------------
 
 // setup kernel virtual memory for
 // a given page table.
+// when calling kvm_setup 'pgtab' should be locked.
 
 void 
 kvm_setup(struct pte *pgtab)
@@ -132,96 +169,67 @@ kvm_setup(struct pte *pgtab)
 	}
 }
 
-void
-kvm_init() 
-{
-	// initialize kpgdir
-	kvm_setup(kpgtab);
 
-	// apply to h/w
-	asm volatile (	
-		// turn on page size extension
-		"movl %%cr4, %%eax\n\t"	
-		"orl %1, %%eax\n\t"
-		"movl %%eax, %%cr4\n\t"
-								
-		// set page directory
-		"movl %0, %%cr3\n\t"
-							
-		// turn on paging
-		"movl %%cr0, %%eax\n\t"
-		"orl %2, %%eax\n\t"
-		"movl %%eax, %%cr0\n\t"
-		:: "r" (kpgtab), "i" (CR4_PSE), "i" (CR0_PG|CR0_WP)
-		: "eax" );	
-}
-
-// setup user space for initcode.S
-void
-uvm_setup(struct pte *pgtab, uchar *init, uint sz)
-{
-	if (sz >= PAGE_SIZE)
-		panic("uvm_setup");
-
-	uint pa = page_alloc();
-	uchar *mem = (uchar *) pa;
-	memset(mem, 0, PAGE_SIZE);
-	memmove(mem, init, sz);
-	pgtab[256].pte_p = 1;
-	pgtab[256].pte_w = 1;
-	pgtab[256].pte_u = 1;
-	pgtab[256].pte_ps = 1;
-	pgtab[256].pte_ad = pa >> 12;
-}
-
-
-//-----------------------------
+//--------------------------
 //
-//  function : page allocator
+//     function : init
 //
-//-----------------------------
-
+//--------------------------
 
 // page allocator which allocates physical
 // pages started from 4MiB to PHYSTOP
+// attach next free page's pa to the current
+// free page.
+// first phy page is resersed for kernel itself.
 
 void
-pgalloc_init()
+palloc_init()
 {
-	// attach next free page's pa to the current
-	// free page.
-	// first phy page is reversed for kernel itself.
+	lock_init(plist.lock);	
 	for (uint i = 1; i < PHY_PAGES - 1; i++) {
 		struct phypage *cur = (struct phypage *) (PAGE_SIZE * i);
 		cur->next = (struct phypage *) (PAGE_SIZE * (i+1));
 	}
 	struct phypage *last = (struct phypage *) (PAGE_SIZE * (PHY_PAGES - 1));
 	last->next = NULL;
-	free_page_list = (struct phypage *) (PAGE_SIZE);
+	plist.head = (struct phypage *) (PAGE_SIZE);
 }
 
 
-// free a phypage at the given pa.
+//--------------------------
+//
+//   function : critical 
+//
+//--------------------------
+
+// free a phypage at given pa.
+// havoc if a free page is freed.
 
 void
 page_free(uint pa)
 {
-	if (pa % PAGE_SIZE != 0)
-		panic("page_free");
-	
+	acquire(plist.lock);
+	if (pa % PAGE_SIZE != 0 || (pa / PAGE_SIZE) >= PHY_PAGES)
+		panic("page_free: not valid");
 	if (pa == 0)
-		panic("page_free");
+		panic("page_free: kernel space");
 
 	// wipe out all the content
-	for (uint *p = (uint *) pa; p < (uint *) (pa + PAGE_SIZE); p++) 
-		*p = 0;
+	memset((void *)pa, 0, PAGE_SIZE);
 
 	// add to free_page_list
 	struct phypage *p = (struct phypage *) pa;
-	p->next = free_page_list;
-	free_page_list = p;
+	p->next = plist.head;
+	plist.head = p;
+	release(plist.lock);
 }
 
+
+//--------------------------
+//
+//   function : critical 
+//
+//--------------------------
 
 // alloc a phypage and return its pa.
 // run out of pages if it returns 0.
@@ -229,11 +237,12 @@ page_free(uint pa)
 uint
 page_alloc(void)
 {	
-	if (free_page_list->next == NULL)
-		return 0;
-
-	uint pa = (uint) free_page_list;
-	free_page_list = free_page_list->next;
+	acquire(plist.lock);
+	if (plist.head == NULL)
+		panic("page_alloc: out of pages");
+	uint pa = (uint) plist.head;
+	plist.head = plist.head->next;
+	release(plist.lock);
 	return pa;
 }
 

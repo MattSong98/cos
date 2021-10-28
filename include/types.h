@@ -8,6 +8,11 @@
 #define NULL 0
 
 typedef enum {
+	unlocked,
+	locked
+} lock;
+
+typedef enum {
 	false,
 	true
 } bool;

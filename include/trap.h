@@ -3,7 +3,7 @@
 
 // type of gates 
 #define INTERRUPT_GATE	0x8E00
-#define TRAP_GATE				0xEF00
+#define TRAP_GATE				0xEE00
 
 // idt size shall not be over 0x100
 #define IDT_SIZE 0x100

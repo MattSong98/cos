@@ -1,3 +1,13 @@
+// All APs are guaranteed to start only after all *init* are done!
+// And IF flags are not set until the first entering to user space.
+// Tag *shared* denotes global variables that might be contented by
+// different threads both in unicode or multicore environments.
+// Tag *read only* denotes global variables that shall not be modified
+// and they have already been initialized by functions with Tag *init*.
+// Tag *critical* denotes functions containing at lease one critical section.
+// Within those functions the proper use of locks or alternatives is required.
+
+
 #include "defs.h"
 
 
@@ -11,8 +21,9 @@
 /* shared */
 
 struct {
+	lock *lock;
 	struct proc procs[PROCS];
-} proc_table;
+} ptable;
 
 
 /* shared */
@@ -22,25 +33,49 @@ struct cpu cpu;
 
 //--------------------------
 //
-//        functions
+//    functions : init
 //
 //--------------------------
 
 
-/* init */
-
 void 
 proc_init()
 {
-	ltr(TSS_SEL);
+	lock_init(ptable.lock);
 	for (uint i = 0; i < PROCS; i++) {
-		proc_table.procs[i].state = UNUSED;
-		proc_table.procs[i].pid = i;
+		ptable.procs[i].state = UNUSED;
+		ptable.procs[i].pid = i;
 	}
 }
 
 
-/* critical */
+//--------------------------
+//
+//    functions : init
+//
+//--------------------------
+
+
+void 
+cpu_init()
+{
+	ltr(TSS_SEL);
+	cpu.proc = NULL;
+	cpu.loaded = false;
+}
+
+
+//--------------------------
+//
+//   functions : critical 
+//
+//--------------------------
+
+static void
+forkret()
+{
+	release(ptable.lock);	
+}
 
 struct proc *
 proc_alloc()
@@ -48,28 +83,39 @@ proc_alloc()
 	struct proc *p = NULL;
 	uchar *sp;
 
+	acquire(ptable.lock);
 	for (uint i = 0; i < PROCS; i++) {
-		if (proc_table.procs[i].state == UNUSED) {
-			p = &(proc_table.procs[i]);
+		if (ptable.procs[i].state == UNUSED) {
+			p = &(ptable.procs[i]);
 			break;
 		}
 	}
-	if (!p) return NULL;	// no proc available
+	if (!p) {
+		release(ptable.lock);
+		return NULL;	// no proc available
+	}
+	p->state = EMBRYO;	// lock p
+	release(ptable.lock);
 
-	p->state = EMBRYO;	// update state
 	sp = p->kstack + KSTACK_SIZE;	// initialize kstack
 	kvm_setup(p->pgtab);	// initialize pgtab
 	sp -= sizeof(*(p->tf));	// initialize trapframe
 	p->tf = (struct trapframe *) sp;
+	sp -= 4;	
+	*(uint *)sp = (uint) trapret;
 	sp -= sizeof(*(p->ctx));	// initialize context
 	p->ctx = (struct context *) sp;
-	p->ctx->eip = (uint) trapret;
+	p->ctx->eip = (uint) forkret;
 	
 	return p;
 }
 
 
-/* init */
+//--------------------------
+//
+//    functions : init
+//
+//--------------------------
 
 // create first proc: init
 
@@ -105,11 +151,22 @@ user_init()
 }
 
 
+//--------------------------
+//
+//   functions : critical 
+//
+//--------------------------
+
+
 static void
 proc_load(struct proc *p)
 {
-	tss_setup(DATA_SEL, (uint) (p->kstack + KSTACK_SIZE));
+	cpu.proc = p;
+	cpu.loaded = true;
+	cpu.ts.ss0 = DATA_SEL;
+	cpu.ts.esp0 = (uint) (p->kstack + KSTACK_SIZE);
 	lcr3((uint) p->pgtab);
+	cpu.proc->state = RUNNING;
 }
 
 
@@ -117,53 +174,75 @@ static void
 proc_unload()
 {
 	lcr3((uint) kpgtab);
+	cpu.loaded = false;
+	cpu.proc = NULL;
 }
 
-
-/* critical */
 
 void 
 scheduler() 
 {
-	cpu.loaded = false;
-
 	for (;;) {
+		acquire(ptable.lock);
 		for (int i = 0; i < PROCS; i++) {
-			if (proc_table.procs[i].state != RUNNABLE) {
+			if (ptable.procs[i].state != RUNNABLE) {
 				continue;
 			}	
-		
-			cpu.loaded = true;	
-			cpu.proc = &proc_table.procs[i];
-			proc_load(cpu.proc);
-			cpu.proc->state = RUNNING;
+			proc_load(&ptable.procs[i]);
 			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
-			cpu.proc->state = RUNNABLE;
+			cprintln("swtich", TYPE_STR);
 			proc_unload();
-			cpu.proc = NULL;
-			cpu.loaded = false;
 		}
+		release(ptable.lock);
 	}
 }
 
 
-/* critical */
+//--------------------------
+//
+//   functions : critical 
+//
+//--------------------------
+
+// only three functions will trigger swtch
+// namely yield(), sleep() & exit().
 
 void
 yield()
 {
+	acquire(ptable.lock);
+	cpu.proc->state = RUNNABLE;
 	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
+	release(ptable.lock);
 }
 
 
-/* critical */
-
 void
-fork()
+sleep() 
 {
 
 }
 
+
+void 
+exit()
+{
+
+}
+
+
+//--------------------------
+//
+//   functions : critical 
+//
+//--------------------------
+
+/* critical */
+void 
+fork()
+{
+
+}
 
 /* critical */
 void
@@ -172,12 +251,6 @@ exec()
 
 }
 
-/* critical */
-void 
-exit()
-{
-
-}
 
 /* critical */
 void
@@ -188,21 +261,7 @@ wait()
 
 /* critical */
 void
-sleep() 
-{
-
-}
-
-/* critical */
-void
 wakeup() 
-{
-
-}
-
-/* critical */
-void
-sched()
 {
 
 }

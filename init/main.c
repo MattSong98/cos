@@ -22,7 +22,7 @@ main(void) {
 //	panic("debug11");
 	
 	kvm_init();
-	pgalloc_init();
+	palloc_init();
 
 	pic_init();
 	timer_init();

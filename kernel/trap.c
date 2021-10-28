@@ -13,12 +13,38 @@
 // instruction. It's quite different from interrupts which always 
 // trigerred by i/o device via a pic chip or instruction "int 0x80"
 // (0x40 is the syscall vector chosed by cos). 
+// Notice that in COS IF flags are cleared for all traps.
 
 
 #include "defs.h"
 
-/* shared | read only */
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
+
+/* read only */
+
 static struct gate_desc idt[IDT_SIZE];
+
+
+/* shared */
+
+static struct {
+	lock *lock;
+	uint count;
+} tick;
+
+
+//--------------------------
+//
+//    function : init 
+//
+//--------------------------
+
 
 static void 
 set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
@@ -28,15 +54,25 @@ set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
 	p->type = type;
 }
 
+
 void 
 trap_init()
 {
+	lock_init(tick.lock);
 	for (ushort i = 0; i < IDT_SIZE; i++) {
 		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	}
 	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
 	lidt((uint)idt, sizeof(idt));
 }
+
+
+//--------------------------
+//
+//   function : critical
+//
+//--------------------------
+
 
 void
 trap(struct trapframe *tf) 
@@ -45,38 +81,42 @@ trap(struct trapframe *tf)
 		syscall();
 		return;
 	}
-
+	
 	switch (tf->trapno) {
+	
 		case T_TIMER:
-			// do nothing for now
-			if (cpu.loaded == true) {
+			if (cpu.loaded == false)	// cpu must have had proc loaded
+				panic("trap: timer");		// since 'cli' after interrupted.
+			acquire(tick.lock);
+			if (tick.count++ > 5) {
+				tick.count = 0;
+				release(tick.lock);
 				yield();
+			} else {
+				release(tick.lock);
 			}
 			pic_send_eoi(IRQ_TIMER);
 			break;
+		
 		case T_KBD:
 			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
 			break;
-		case T_SPUR7:
-			break;
+		
 		case T_IDE:
 			ide_intr();
 			pic_send_eoi(IRQ_IDE);
 			break;
+		
+		case T_SPUR7:	// spurious interrupts
 		case T_SPUR15:
 			break;
-		default:
-			// unknown
+
+		default:	// exceptions
 			cprintln(&(tf->trapno), TYPE_HEX);
-			panic("trap");
+			panic("trap: exceptions");
 	}
 			
 }
-
-
-
-
-
 
 
