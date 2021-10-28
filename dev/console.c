@@ -8,50 +8,56 @@
 //--------------------------
 
 
+/* shared */
+
 static uchar buf[CGA_SIZE];
 static uchar atr[CGA_SIZE];
-static ushort pos;
+static uint pos;
 
 
 //--------------------------
 //
-//    function : 
+//    function : init
 //
 //--------------------------
 
-static void 
-vram_write(uchar c, uchar atr, ushort pos) 
-{ 
-	// to be optimized 
-	ushort word = (ushort) c + (((ushort) atr) << 8);
-	asm volatile ("push %%gs\n\t"
-								"mov %2, %%ax\n\t"
-								"mov %%ax, %%gs\n\t"
-								"shl $1, %1\n\t"
-								"movw %0, %%gs:(%1)\n\t"
-								"pop %%gs\n\t"
-								:	// no output
-								: "r" (word), "D" (pos), "i" (VRAM_SEL)
-								: "eax");
-}
 
 static void 
-cursor_update(ushort pos) 
+flush() 
 {
+	for (uint pos = 0; pos < CGA_SIZE; pos++) {
+		ushort word = (ushort) buf[pos] + (((ushort) atr[pos]) << 8);
+		asm volatile (
+			"shl $1, %1\n\t"
+			"addl %2, %1\n\t"
+			"movw %0, (%1)\n\t" ::
+		  "r" (word), "D" (pos), "i" (VRAM_BASE));
+	}
 	outb(0x3D4, 0x0F);
 	outb(0x3D5, (uchar) (pos & 0xFF));
 	outb(0x3D4, 0x0E);
 	outb(0x3D5, (uchar) ((pos >> 8) & 0xFF));
 }
 
-static void 
-flush() 
+
+void 
+console_init() 
 {
+	pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
-		vram_write(buf[i], atr[i], i);
+		buf[i] = ' ';
+		atr[i] = CGA_STD_ATR;
 	}
-	cursor_update(pos);
+	flush();
 }
+
+
+//--------------------------
+//
+//   function : critical
+//
+//--------------------------
+
 
 static void 
 scroll_up() 
@@ -65,6 +71,7 @@ scroll_up()
 	pos = CGA_SIZE - CGA_COL_SIZE - 1;
 }
 
+
 static void 
 buf_write(uchar c) 
 {
@@ -74,16 +81,6 @@ buf_write(uchar c)
 	buf[pos++] = c;
 }
 
-void 
-console_init() 
-{
-	pos = 0;
-	for (ushort i = 0; i < CGA_SIZE; i++) {
-		buf[i] = ' ';
-		atr[i] = CGA_STD_ATR;
-	}
-	flush();
-}
 
 void 
 cprintf(const void *ptr, int type) 
@@ -126,6 +123,7 @@ cprintf(const void *ptr, int type)
 	}
 }
 
+
 void 
 cprintln(const void *ptr, int type) 
 {
@@ -144,7 +142,4 @@ console_intr(int c)
 	
 	cprintf(&c, TYPE_CHAR);
 }
-
-
-
 

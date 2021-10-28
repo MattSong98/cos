@@ -1,6 +1,8 @@
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
 
+#define VRAM_BASE 0xB8000
+
 #define TYPE_HEX 0
 #define TYPE_STR 1
 #define TYPE_CHAR 2
