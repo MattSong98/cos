@@ -1,57 +1,50 @@
 // Simple PIO−based (non−DMA) IDE driver code.
-// Only channel 1 is used.
+// Aussme only channel 1 is used.
+// Assume only 1 cpu would handle ide_intr.
 
 #include "defs.h"
 
+
+//--------------------------
+//
+//    global variables
+//
+//--------------------------
+
+
 /* shared */
+
 // cache ide sectors' data by LRU
-struct {
+
+static struct {
+	lock lock;
 	struct ide_buf bufs[IDE_BUFS];
 	struct ide_buf head;
 } ide_cache;
 
+
 /* shared */
+
 // queue of ide r/w requests
-static struct ide_buf *ide_queue;	
+
+static struct {
+	lock lock;
+	struct ide_buf *head;	
+} ide_queue;
+
+//--------------------------
+//
+//   function : init 
+//
+//--------------------------
 
 
-// wait until ide is ready
-// set checkerr 1 to check error
-static int
-ide_wait(int checkerr)
-{
-	uchar r;
-	while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
-	if (checkerr && (r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
-		return -1;
-	return 0;
-}
-
-static void
-ide_start(struct ide_buf *p)
-{
-	ide_wait(0);
-	outb(IDE_CTRL_PORT, 0);	// generate intr
-	outb(IDE_CNT_PORT, 1);	// read 1 sector
-	outb(IDE_POS0_PORT, p->sector & 0xFF);
-	outb(IDE_POS1_PORT, (p->sector >> 8) & 0xFF);
-	outb(IDE_POS2_PORT, (p->sector >> 16) & 0xFF);
-	outb(IDE_POS3_PORT, ((p->sector >> 24) & 0x0F) | IDE_MASTER);
-	// write | read
-	if (p->flags & IDE_BUF_DIRTY) {
-		outb(IDE_COMD_PORT, IDE_COMD_WRITE);
-		outsl(IDE_DATA_PORT, p->data, 512/4);
-	} else {
-		outb(IDE_COMD_PORT, IDE_COMD_READ);
-	}
-}
-
-/* init */
 void 
 ide_init()
 {
-	// initialize ide_cache
-	ide_cache.head.prev = &ide_cache.head;
+	lock_init(&ide_cache.lock);
+	lock_init(&ide_queue.lock);
+	ide_cache.head.prev = &ide_cache.head;	// initialize ide_cache
 	ide_cache.head.next = &ide_cache.head;
 	for (struct ide_buf *p = ide_cache.bufs; p < ide_cache.bufs + IDE_BUFS; p++) {
 		p->next = ide_cache.head.next;
@@ -60,13 +53,9 @@ ide_init()
 		ide_cache.head.next = p;
 		p->dev = -1;
 	}			
-	
-	// enable ide intr
-	pic_enable_irq(IRQ_IDE);
-	
-	// check if the master drive is present
-	outb(IDE_POS3_PORT, IDE_MASTER);	
-	ide_wait(0);
+	pic_enable_irq(IRQ_IDE);	// enable ide intr
+	outb(IDE_POS3_PORT, IDE_MASTER);	// check if the master drive is present
+	while ((inb(IDE_STAT_PORT) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY); // wait till ready
 	for (uint i = 0; i < 1000; i++) {
 		if (inb(IDE_STAT_PORT) != 0) 
 			return;
@@ -74,61 +63,119 @@ ide_init()
 	panic("ide_init");	// master not found
 }
 
+
+//--------------------------
+//
+//   function : intr
+//
+//--------------------------
+
+
+// ide_start will be called exclusively by ide_sync or ide_intr.
+// struct buf *p must have been locked.
+
+static void
+ide_start(struct ide_buf *p)
+{
+	while ((inb(IDE_STAT_PORT) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY); // wait till ready
+	outb(IDE_CTRL_PORT, 0);	// generate intr
+	outb(IDE_CNT_PORT, 1);	// read 1 sector
+	outb(IDE_POS0_PORT, p->sector & 0xFF);
+	outb(IDE_POS1_PORT, (p->sector >> 8) & 0xFF);
+	outb(IDE_POS2_PORT, (p->sector >> 16) & 0xFF);
+	outb(IDE_POS3_PORT, ((p->sector >> 24) & 0x0F) | IDE_MASTER);
+	if (p->flags & IDE_BUF_DIRTY) {	// write | read
+		outb(IDE_COMD_PORT, IDE_COMD_WRITE);
+		outsl(IDE_DATA_PORT, p->data, 512/4);
+	} else {
+		outb(IDE_COMD_PORT, IDE_COMD_READ);
+	}
+}
+
+
 void
 ide_intr() 
 {
-	// ide_queue = ide_queue->next;
-	if (!(ide_queue->flags & IDE_BUF_DIRTY)) {
-		if (ide_wait(1) == -1)
+	acquire(&ide_queue.lock);
+	if (ide_queue.head == NULL)
+		panic("ide_intr: ide queue empty");
+	struct ide_buf *p = ide_queue.head;
+	ide_queue.head = ide_queue.head->qnext;
+	if (ide_queue.head != NULL)
+		ide_start(ide_queue.head);	
+	release(&ide_queue.lock);
+
+	if (!(p->flags & IDE_BUF_DIRTY)) {
+		uchar r;
+		while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
+		if ((r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
 			panic("ide_intr");
-		insl(IDE_DATA_PORT, ide_queue->data, 512/4);
+		insl(IDE_DATA_PORT, p->data, 512/4);
 	}
-	
-	ide_queue->flags |= IDE_BUF_VALID;	// set flag:valid
-	ide_queue->flags &= ~IDE_BUF_DIRTY;	// clear flag:dirty
-	
-	// start if queue is not empty
-	ide_queue = ide_queue->qnext;
-	if (ide_queue != NULL)
-		ide_start(ide_queue);
+	p->flags |= IDE_BUF_VALID;	// set flag:valid
+	p->flags &= ~IDE_BUF_DIRTY;	// clear flag:dirty
+	// wake up proc !!
+	// wakeup(proc)
 }
+
+
+//--------------------------
+//
+//   function : critical
+//
+//--------------------------
+
+
+// when calling ide_sync p shall have been locked (IDE_BUF_BUSY).
 
 static void
 ide_sync(struct ide_buf *p)
 {
 	if (!(p->flags & IDE_BUF_BUSY))
-		panic("ide_sync");
+		panic("ide_sync: buf not locked");
 	if ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) == IDE_BUF_VALID)
-		panic("ide_sync");
+		panic("ide_sync: nothing to do");
 	if ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) == IDE_BUF_DIRTY)
-		panic("ide_sync");
+		panic("ide_sync: not valid");
 
 	// attach p to the tail of ide_queue
+	acquire(&ide_queue.lock);
 	p->qnext = NULL;
-	if (ide_queue == NULL) {
-		ide_queue = p;
+	if (ide_queue.head == NULL) {
+		ide_queue.head = p;	
 		ide_start(p);
 	} else {
 		struct ide_buf *q;
-		for (q = ide_queue; q->qnext; q = q->qnext);
+		for (q = ide_queue.head; q->qnext; q = q->qnext);
 		q->next = p;
 	}
+	release(&ide_queue.lock);
 }
 
-/* critical */
+
+//--------------------------
+//
+//   function : critical
+//
+//--------------------------
+
+
 struct ide_buf *
 ide_bget(uint dev, uint sector, uint access_mode)
 {
 	struct ide_buf *p;
+	acquire(&ide_cache.lock);
 	for (p = ide_cache.head.next; p != &ide_cache.head; p = p->next) {
 		if (p->dev == dev && p->sector == sector) {
 			if (!(p->flags & IDE_BUF_BUSY)) {
 				p->flags |= IDE_BUF_BUSY;
 				if (access_mode == IDE_RW)
 					p->flags |= IDE_BUF_DIRTY;
+				release(&ide_cache.lock);
 				return p;
 			} else {
-				return NULL;	// busy now
+				release(&ide_cache.lock);
+				return NULL;	// busy now, return or sleep until it's available
 			}
 		}
 	}
@@ -139,38 +186,43 @@ ide_bget(uint dev, uint sector, uint access_mode)
 			p->dev = dev;
 			p->sector = sector;
 			p->flags = IDE_BUF_BUSY;
+			release(&ide_cache.lock);	// here !!!!!!!!!!!! to sync()
 			ide_sync(p);
-			while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID);
+			while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID) {
+				;	// sleep here
+			}
 			if (access_mode == IDE_RW) 
 				p->flags |= IDE_BUF_DIRTY;
 			return p;
 		}
 	}
+	release(&ide_cache.lock);
 	return NULL;	// no buf available
 }
 
-/* critical */
+
 void
 ide_brelse(struct ide_buf *p)
 {
 	if ((p->flags & IDE_BUF_BUSY) == 0)
-		panic("ide_brelse");
+		panic("ide_brelse: p not locked");
 	
 	// flush back to drive if dirty
 	if (p->flags & IDE_BUF_DIRTY) {
 		ide_sync(p);
-		while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID);
+		while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID) {
+			;	// sleep here
+		}
 	}
 
-	// move buf to the head (RU)
-	p->prev->next = p->next;
+	acquire(&ide_cache.lock);
+	p->prev->next = p->next;	// move buf to the head (RU)
 	p->next->prev = p->prev;
 	p->next = ide_cache.head.next;
 	p->prev = &ide_cache.head;
 	ide_cache.head.next = p;
 	p->next->prev = p;
-
-	// clear flag:busy
-	p->flags &= ~IDE_BUF_BUSY;
+	p->flags &= ~IDE_BUF_BUSY;	// clear flag:busy
+	release(&ide_cache.lock);
 }
 

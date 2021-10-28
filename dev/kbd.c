@@ -1,3 +1,5 @@
+// Assume only 1 cpu would handle kbd_intr.
+
 // Attension, most but not all of keys are mapped.
 // Unexpected results might be produced due to unmapped keys.
 // To keep it simple, state of kbd is captured by variable 
