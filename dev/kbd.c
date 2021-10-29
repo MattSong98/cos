@@ -147,7 +147,7 @@ kbd_init(void)
 
 //--------------------------
 //
-// function : non-critical 
+// function : thread-safe
 //
 //--------------------------
 

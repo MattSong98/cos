@@ -60,7 +60,8 @@ static inline void
 flush_segr()
 {
 	asm volatile(
-		"mov %0, %%eax\n\t"
+		"ljmp %1, $1f\n\t"
+		"1: mov %0, %%eax\n\t"
 		"mov %%eax, %%ds\n\t"
 		"mov %0, %%eax\n\t"
 		"mov %%eax, %%es\n\t"
@@ -70,7 +71,7 @@ flush_segr()
 		"mov %%eax, %%fs\n\t"
 		"mov %0, %%eax\n\t"
 		"mov %%eax, %%gs\n\t" ::
-		"i" (DATA_SEL) :
+		"i" (DATA_SEL) , "i" (CODE_SEL) :
 		"eax" );
 }
 
@@ -232,10 +233,13 @@ scheduler()
 			}	
 			proc_load(&ptable.procs[i]);
 			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
-			cprintln("swtich", TYPE_STR);
+			// cprintln("swtich", TYPE_STR);
 			proc_unload();
 		}
-		release(&ptable.lock);
+		release(&ptable.lock);				// scheduler will have a break here
+		for (uint i = 0; i < 10; i++)	// sti for a while to handle intr
+			sti();											// in case that all procs are sleeping.
+		cli();
 	}
 }
 
@@ -260,10 +264,31 @@ yield()
 }
 
 
-void
-sleep() 
-{
+// be careful of 'lost wake up'
+// and 'multiple sleepers' problems.
+// before calling sleep() lw_lock must
+// be acquired !
 
+void
+sleep(void *channel, lock *lw_lock) 
+{
+	if (cpu.loaded == false)
+		panic("sleep: no proc loaded");
+	if (lw_lock == NULL)
+		panic("sleep: lw_lock not obtained");
+
+	acquire(&ptable.lock);
+	release(lw_lock);
+
+	// switch 
+	cpu.proc->state = SLEEPING;
+	cpu.proc->channel = channel;
+	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
+
+	// being waked up
+	cpu.proc->channel = NULL;
+	release(&ptable.lock);
+	acquire(lw_lock);	
 }
 
 
@@ -280,6 +305,20 @@ exit()
 //
 //--------------------------
 
+
+// counterparts of sleep()
+// wake up all procs sleeping on 'channel'
+
+void
+wakeup(void *channel) 
+{
+	acquire(&ptable.lock);
+	for (uint i = 0; i < PROCS; i++) {
+		if (ptable.procs[i].state == SLEEPING && ptable.procs[i].channel == channel)
+			ptable.procs[i].state = RUNNABLE;
+	}
+	release(&ptable.lock);
+}
 
 /* critical */
 void 
@@ -299,13 +338,6 @@ exec()
 /* critical */
 void
 wait()
-{
-
-}
-
-/* critical */
-void
-wakeup() 
 {
 
 }

@@ -32,6 +32,14 @@ static struct {
 	struct ide_buf *head;	
 } ide_queue;
 
+
+/* shared */
+
+// to avoid 'lost wake up'
+
+static lock lw_lock;
+
+
 //--------------------------
 //
 //   function : init 
@@ -42,8 +50,9 @@ static struct {
 void 
 ide_init()
 {
-	lock_init(&ide_cache.lock);
+	lock_init(&ide_cache.lock);	// lock initialization
 	lock_init(&ide_queue.lock);
+	lock_init(&lw_lock);
 	ide_cache.head.prev = &ide_cache.head;	// initialize ide_cache
 	ide_cache.head.next = &ide_cache.head;
 	for (struct ide_buf *p = ide_cache.bufs; p < ide_cache.bufs + IDE_BUFS; p++) {
@@ -101,11 +110,12 @@ ide_intr()
 		panic("ide_intr: ide queue empty");
 	struct ide_buf *p = ide_queue.head;
 	ide_queue.head = ide_queue.head->qnext;
-	if (ide_queue.head != NULL)
-		ide_start(ide_queue.head);	
+	if (ide_queue.head != NULL) {
+		ide_start(ide_queue.head);
+	}	
 	release(&ide_queue.lock);
-
-	if (!(p->flags & IDE_BUF_DIRTY)) {
+	
+	if (!(p->flags & IDE_BUF_DIRTY)) {	// whether to copy data
 		uchar r;
 		while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
 		if ((r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
@@ -114,8 +124,10 @@ ide_intr()
 	}
 	p->flags |= IDE_BUF_VALID;	// set flag:valid
 	p->flags &= ~IDE_BUF_DIRTY;	// clear flag:dirty
-	// wake up proc !!
-	// wakeup(proc)
+	
+	acquire(&lw_lock);	// wake up proc 
+	wakeup(p);
+	release(&lw_lock);		
 }
 
 
@@ -126,7 +138,8 @@ ide_intr()
 //--------------------------
 
 
-// when calling ide_sync p shall have been locked (IDE_BUF_BUSY).
+// when calling ide_sync p shall 
+// have been locked (IDE_BUF_BUSY).
 
 static void
 ide_sync(struct ide_buf *p)
@@ -138,8 +151,7 @@ ide_sync(struct ide_buf *p)
 	if ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) == IDE_BUF_DIRTY)
 		panic("ide_sync: not valid");
 
-	// attach p to the tail of ide_queue
-	acquire(&ide_queue.lock);
+	acquire(&ide_queue.lock);	// attach p to the tail of ide_queue
 	p->qnext = NULL;
 	if (ide_queue.head == NULL) {
 		ide_queue.head = p;	
@@ -150,6 +162,12 @@ ide_sync(struct ide_buf *p)
 		q->next = p;
 	}
 	release(&ide_queue.lock);
+
+	acquire(&lw_lock);	// sleep until buf's ready
+	while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID) {
+		sleep(p, &lw_lock);
+	}
+	release(&lw_lock);
 }
 
 
@@ -186,11 +204,8 @@ ide_bget(uint dev, uint sector, uint access_mode)
 			p->dev = dev;
 			p->sector = sector;
 			p->flags = IDE_BUF_BUSY;
-			release(&ide_cache.lock);	// here !!!!!!!!!!!! to sync()
+			release(&ide_cache.lock);	
 			ide_sync(p);
-			while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID) {
-				;	// sleep here
-			}
 			if (access_mode == IDE_RW) 
 				p->flags |= IDE_BUF_DIRTY;
 			return p;
@@ -209,10 +224,7 @@ ide_brelse(struct ide_buf *p)
 	
 	// flush back to drive if dirty
 	if (p->flags & IDE_BUF_DIRTY) {
-		ide_sync(p);
-		while ((p->flags & (IDE_BUF_VALID | IDE_BUF_DIRTY)) != IDE_BUF_VALID) {
-			;	// sleep here
-		}
+		ide_sync(p);	// thread safe
 	}
 
 	acquire(&ide_cache.lock);

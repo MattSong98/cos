@@ -13,7 +13,6 @@
 // instruction. It's quite different from interrupts which always 
 // trigerred by i/o device via a pic chip or instruction "int 0x80"
 // (0x40 is the syscall vector chosed by cos). 
-// Notice that in COS IF flags are cleared for all traps.
 
 
 #include "defs.h"
@@ -83,10 +82,8 @@ trap(struct trapframe *tf)
 	switch (tf->trapno) {
 	
 		case T_TIMER:
-			if (cpu.loaded == false)	// cpu must have had proc loaded
-				panic("trap: timer");		// since 'cli' after interrupted.
-			acquire(&tick.lock);
-			if (tick.count++ > 1) {
+			acquire(&tick.lock);	// cpu must have had proc loaded before calling yield().
+			if (tick.count++ > 5 && cpu.loaded == true) {
 				tick.count = 0;
 				release(&tick.lock);
 				yield();

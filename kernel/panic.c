@@ -1,7 +1,7 @@
 #include "defs.h"
 
 void 
-panic(const char *err) 
+panic(char *err) 
 {
 	cprintln(err, TYPE_STR);
 	// spin

@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o -b binary target/initcode 
+target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o -b binary target/initcode 
 
 target/main.o: init/main.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -Iinclude -c init/main.c -o target/main.o
@@ -40,6 +40,9 @@ target/proc.o: kernel/proc.c
 
 target/console.o: dev/console.c
 	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/console.c -o target/console.o
+
+target/lconsole.o: dev/lconsole.c
+	$(CC) $(CFLAGS) -fno-pic -O0 -nostdinc -Iinclude -c dev/lconsole.c -o target/lconsole.o
 
 target/kbd.o: dev/kbd.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/kbd.c -o target/kbd.o

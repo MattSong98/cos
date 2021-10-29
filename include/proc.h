@@ -35,7 +35,7 @@ struct proc
 	struct proc *parent;
 	struct trapframe *tf;
 	struct context *ctx;
-	// void *chan;
+	void *channel;	// resource to wait for
 	// int killed;
 	// struct file *ofile[NOFILE];
 	// struct inode *cwd;

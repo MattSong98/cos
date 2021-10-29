@@ -10,7 +10,7 @@
 
 /* shared */
 
-struct cga {
+static struct cga {
 	uchar buf[CGA_SIZE];
 	uchar atr[CGA_SIZE];
 	uint pos;
@@ -43,9 +43,8 @@ flush()
 
 
 void 
-console_init() 
+lconsole_init() 
 {
-	lock_init(cga.lock);
 	cga.pos = 0;
 	for (ushort i = 0; i < CGA_SIZE; i++) {
 		cga.buf[i] = ' ';
@@ -86,7 +85,7 @@ buf_write(uchar c)
 
 
 void 
-cprintf(const void *ptr, int type) 
+lprintf(void *ptr, int type) 
 {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
@@ -128,7 +127,7 @@ cprintf(const void *ptr, int type)
 
 
 void 
-cprintln(const void *ptr, int type) 
+lprintln(void *ptr, int type) 
 {
 	cprintf(ptr, type);
 	while (cga.pos % CGA_COL_SIZE != 0)
@@ -145,7 +144,7 @@ cprintln(const void *ptr, int type)
 
 
 void 
-console_intr(int c) 
+lconsole_intr(int c) 
 {
 	if (c == -1) panic("console_intr");
 	if (c == 0) return;

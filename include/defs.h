@@ -52,9 +52,14 @@ extern void pic_send_eoi(uchar);
 
 // console.c
 extern void console_init(void);
-extern void cprintf(const void *, int);
+extern void cprintf(void *, int);
 extern void console_intr(int);
-extern void cprintln(const void *, int);
+extern void cprintln(void *, int);
+
+// lconsole.c
+extern void lconsole_init(void);
+extern void lprintf(void *, int);
+extern void lprintln(void *, int);
 
 // ide.c
 extern void ide_init(void);
@@ -80,8 +85,8 @@ extern void exec(void);
 extern void exit(void);
 extern void wait(void);
 extern void yield(void);
-extern void sleep(void);
-extern void wakeup(void);
+extern void sleep(void *, lock *);
+extern void wakeup(void *);
 extern void scheduler(void);
 extern void kill(void);
 
@@ -98,7 +103,7 @@ extern void uvm_setup(struct pte *, uchar *, uint);
 extern void tss_setup(ushort, uint);
 
 // panic.c
-extern void panic(const char *);
+extern void panic(char *);
 
 // string.c
 extern void strcpy(char *, char *);

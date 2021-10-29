@@ -10,7 +10,7 @@
 
 /* shared */
 
-struct cga {
+static struct cga {
 	lock lock;
 	uchar buf[CGA_SIZE];
 	uchar atr[CGA_SIZE];
@@ -91,7 +91,7 @@ buf_write(uchar c)
 
 
 void 
-cprintf(const void *ptr, int type) 
+cprintf(void *ptr, int type) 
 {
 	if (type == TYPE_HEX) {
 		// assume sizeof(TYPE_HEX) == 4
@@ -133,7 +133,7 @@ cprintf(const void *ptr, int type)
 
 
 void 
-cprintln(const void *ptr, int type) 
+cprintln(void *ptr, int type) 
 {
 	cprintf(ptr, type);
 	while (cga.pos % CGA_COL_SIZE != 0)
