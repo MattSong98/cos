@@ -1,1 +1,1 @@
-times 512*4 db 0xAA
+times 512*512 db 0xAA

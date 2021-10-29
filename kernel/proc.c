@@ -11,11 +11,11 @@
 #include "defs.h"
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//    global variables
+//   																		  global variables 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 /* shared */
@@ -31,11 +31,11 @@ struct {
 struct cpu cpu;
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//    functions : init
+//   																		  functions : init 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 void 
@@ -49,11 +49,11 @@ proc_init()
 }
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//    functions : init
+//   																		  functions : init 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 static inline void
@@ -106,11 +106,11 @@ cpu_init()
 }
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//   functions : critical 
+//   																		  functions : init 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 static void
@@ -153,11 +153,11 @@ proc_alloc()
 }
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//    functions : init
+//   																		  functions : init 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 // create first proc: init
@@ -167,16 +167,23 @@ user_init()
 {
 	struct proc *p = proc_alloc();
 	if (!p) panic("user_init");
+	struct proc *q = proc_alloc();
+	if (!q) panic("user_init");
 
 	extern uchar _binary_target_initcode_start[];
 	extern uchar _binary_target_initcode_size[];
+	extern uchar _binary_target_initcode2_start[];
+	extern uchar _binary_target_initcode2_size[];
 	
 	// initialize the trivial
 	strcpy(p->name, "init");	
 	p->parent = NULL;
+	strcpy(q->name, "init2");	
+	q->parent = NULL;
 
 	// initialize user space
 	uvm_setup(p->pgtab, _binary_target_initcode_start, (uint)_binary_target_initcode_size);
+	uvm_setup(q->pgtab, _binary_target_initcode2_start, (uint)_binary_target_initcode2_size);
 
 	// setup trapframe
 	memset(p->tf, 0, sizeof(*(p->tf)));
@@ -190,15 +197,27 @@ user_init()
 	p->tf->esp = PAGE_SIZE;
 	p->tf->eip = 0;
 
+	memset(q->tf, 0, sizeof(*(q->tf)));
+	q->tf->cs = UCODE_SEL;
+	q->tf->ds = UDATA_SEL;
+	q->tf->es =	UDATA_SEL;
+	q->tf->ss = UDATA_SEL;
+	q->tf->fs = UDATA_SEL;
+	q->tf->gs = UDATA_SEL;
+	q->tf->eflags = FL_IF;
+	q->tf->esp = PAGE_SIZE;
+	q->tf->eip = 0;
+
 	p->state = RUNNABLE;
+	q->state = RUNNABLE;
 }
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//   functions : critical 
+//   																		  functions : critical 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 static void
@@ -233,49 +252,40 @@ scheduler()
 			}	
 			proc_load(&ptable.procs[i]);
 			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
-			// cprintln("swtich", TYPE_STR);
 			proc_unload();
 		}
-		release(&ptable.lock);				// scheduler will have a break here
-		for (uint i = 0; i < 10; i++)	// sti for a while to handle intr
-			sti();											// in case that all procs are sleeping.
+		release(&ptable.lock);												// scheduler will have a break here
+		sti();
+		for (int i = 0; i < 500; i++);								// in case that all procs are sleeping.
+		cprintf("debug", TYPE_HEX);
 		cli();
 	}
 }
 
-
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//   functions : critical 
+//   																		  functions : critical 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
-
-// only three functions will trigger swtch
-// namely yield(), sleep() & exit().
 
 void
 yield()
 {
-	acquire(&ptable.lock);
-	cpu.proc->state = RUNNABLE;
+	acquire(&ptable.lock);													// only three functions will trigger swtch
+	cpu.proc->state = RUNNABLE;											// namely yield(), sleep() & exit().
 	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
 	release(&ptable.lock);
 }
 
 
-// be careful of 'lost wake up'
-// and 'multiple sleepers' problems.
-// before calling sleep() lw_lock must
-// be acquired !
-
 void
 sleep(void *channel, lock *lw_lock) 
 {
-	if (cpu.loaded == false)
-		panic("sleep: no proc loaded");
-	if (lw_lock == NULL)
-		panic("sleep: lw_lock not obtained");
+	if (cpu.loaded == false)												// be careful of 'lost wake up'
+		panic("sleep: no proc loaded");								// and 'multiple sleepers' problems.
+	if (lw_lock == NULL)														// before calling sleep() lw_lock must
+		panic("sleep: lw_lock not obtained");					// be acquired !
 
 	acquire(&ptable.lock);
 	release(lw_lock);
@@ -347,4 +357,18 @@ void
 kill()
 {
 
+}
+
+void 
+proc_dump()
+{
+	cprintf("pid: ", TYPE_STR);
+	cprintf(&(ptable.procs[0].pid), TYPE_HEX);
+	cprintf("  state: ", TYPE_STR);
+	cprintln(&(ptable.procs[0].state), TYPE_HEX);
+	cprintf("pid: ", TYPE_STR);
+	cprintf(&(ptable.procs[1].pid), TYPE_HEX);
+	cprintf("  state: ", TYPE_STR);
+	cprintln(&(ptable.procs[1].state), TYPE_HEX);
+	
 }

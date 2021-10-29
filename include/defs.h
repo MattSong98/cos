@@ -89,6 +89,7 @@ extern void sleep(void *, lock *);
 extern void wakeup(void *);
 extern void scheduler(void);
 extern void kill(void);
+extern void proc_dump(void);
 
 // vm.c
 extern struct seg_desc gdt[GDT_SIZE];	// variable

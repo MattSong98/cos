@@ -82,25 +82,20 @@ trap(struct trapframe *tf)
 	switch (tf->trapno) {
 	
 		case T_TIMER:
-			acquire(&tick.lock);	// cpu must have had proc loaded before calling yield().
-			if (tick.count++ > 5 && cpu.loaded == true) {
-				tick.count = 0;
-				release(&tick.lock);
-				yield();
-			} else {
-				release(&tick.lock);
-			}
 			pic_send_eoi(IRQ_TIMER);
+			if (cpu.loaded == true) {
+				yield();
+			}
 			break;
 		
 		case T_KBD:
-			kbd_intr();
 			pic_send_eoi(IRQ_KBD);
+			kbd_intr();
 			break;
 		
 		case T_IDE:
-			ide_intr();
 			pic_send_eoi(IRQ_IDE);
+			ide_intr();
 			break;
 		
 		case T_SPUR7:	// spurious interrupts

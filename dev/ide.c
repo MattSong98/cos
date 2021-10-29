@@ -69,7 +69,7 @@ ide_init()
 		if (inb(IDE_STAT_PORT) != 0) 
 			return;
 	}
-	panic("ide_init");	// master not found
+	panic("ide_init: master not found");	// master not found
 }
 
 
@@ -119,7 +119,7 @@ ide_intr()
 		uchar r;
 		while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
 		if ((r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
-			panic("ide_intr");
+			panic("ide_intr: data error");
 		insl(IDE_DATA_PORT, p->data, 512/4);
 	}
 	p->flags |= IDE_BUF_VALID;	// set flag:valid
@@ -183,6 +183,7 @@ ide_bget(uint dev, uint sector, uint access_mode)
 {
 	struct ide_buf *p;
 	acquire(&ide_cache.lock);
+loop:
 	for (p = ide_cache.head.next; p != &ide_cache.head; p = p->next) {
 		if (p->dev == dev && p->sector == sector) {
 			if (!(p->flags & IDE_BUF_BUSY)) {
@@ -192,8 +193,10 @@ ide_bget(uint dev, uint sector, uint access_mode)
 				release(&ide_cache.lock);
 				return p;
 			} else {
-				release(&ide_cache.lock);
-				return NULL;	// busy now, return or sleep until it's available
+				// release(&ide_cache.lock);
+				// return NULL;	// busy now, return or sleep until it's available
+				sleep(p, &ide_cache.lock);
+				goto loop;
 			}
 		}
 	}
@@ -235,6 +238,7 @@ ide_brelse(struct ide_buf *p)
 	ide_cache.head.next = p;
 	p->next->prev = p;
 	p->flags &= ~IDE_BUF_BUSY;	// clear flag:busy
+	wakeup(p);
 	release(&ide_cache.lock);
 }
 
