@@ -1,8 +1,6 @@
 .text
 
 start:
-	mov $0x30, %eax		# print hello
-	int $0x30
 
 spin:
-	jmp start
+	jmp spin

@@ -7,6 +7,15 @@
 // Tag *critical* denotes functions containing at lease one critical section.
 // Within those functions the proper use of locks or alternatives is required.
 
+// Note that Flag IF won't be set until it first enters the userspace.
+// Taking advantage of this feature, all init functions can regard itself running in a 
+// uni-thread environment. 
+// When no matter what kinds of trap is triggerred including exceptions, interrupt
+// and system call, IF Flag will be cleared for simplicity, which menas in COS you
+// can never enter kernelspace itself from kernelspace.
+// To avoid all process sleeping and never able to wake up due to the cleared IF in 
+// kernelspace, process 'init' will never fall asleep.
+
 
 #include "defs.h"
 
@@ -101,7 +110,6 @@ cpu_init()
 	flush_segr();	// flush segment regs
 	enable_paging();	// enable paging
 	cpu.proc = NULL;	// prepare for proc to load in
-	cpu.loaded = false;
 	cpu.sched_ctx = NULL;
 }
 
@@ -169,21 +177,28 @@ user_init()
 	if (!p) panic("user_init");
 	struct proc *q = proc_alloc();
 	if (!q) panic("user_init");
-
+	struct proc *r = proc_alloc();
+	if (!r) panic("user_init");
+	
 	extern uchar _binary_target_initcode_start[];
 	extern uchar _binary_target_initcode_size[];
+	extern uchar _binary_target_initcode1_start[];
+	extern uchar _binary_target_initcode1_size[];
 	extern uchar _binary_target_initcode2_start[];
 	extern uchar _binary_target_initcode2_size[];
 	
 	// initialize the trivial
 	strcpy(p->name, "init");	
 	p->parent = NULL;
-	strcpy(q->name, "init2");	
+	strcpy(q->name, "init1");	
 	q->parent = NULL;
+	strcpy(r->name, "init2");	
+	r->parent = NULL;
 
 	// initialize user space
 	uvm_setup(p->pgtab, _binary_target_initcode_start, (uint)_binary_target_initcode_size);
-	uvm_setup(q->pgtab, _binary_target_initcode2_start, (uint)_binary_target_initcode2_size);
+	uvm_setup(q->pgtab, _binary_target_initcode1_start, (uint)_binary_target_initcode1_size);
+	uvm_setup(r->pgtab, _binary_target_initcode2_start, (uint)_binary_target_initcode2_size);
 
 	// setup trapframe
 	memset(p->tf, 0, sizeof(*(p->tf)));
@@ -208,8 +223,20 @@ user_init()
 	q->tf->esp = PAGE_SIZE;
 	q->tf->eip = 0;
 
-	p->state = RUNNABLE;
+	memset(r->tf, 0, sizeof(*(r->tf)));
+	r->tf->cs = UCODE_SEL;
+	r->tf->ds = UDATA_SEL;
+	r->tf->es =	UDATA_SEL;
+	r->tf->ss = UDATA_SEL;
+	r->tf->fs = UDATA_SEL;
+	r->tf->gs = UDATA_SEL;
+	r->tf->eflags = FL_IF;
+	r->tf->esp = PAGE_SIZE;
+	r->tf->eip = 0;
+	
+	// p->state = RUNNABLE;
 	q->state = RUNNABLE;
+	r->state = RUNNABLE;
 }
 
 
@@ -224,7 +251,6 @@ static void
 proc_load(struct proc *p)
 {
 	cpu.proc = p;
-	cpu.loaded = true;
 	cpu.ts.ss0 = DATA_SEL;
 	cpu.ts.esp0 = (uint) (p->kstack + KSTACK_SIZE);
 	lcr3((uint) p->pgtab);
@@ -236,7 +262,6 @@ static void
 proc_unload()
 {
 	lcr3((uint) kpgtab);
-	cpu.loaded = false;
 	cpu.proc = NULL;
 }
 
@@ -245,20 +270,21 @@ void
 scheduler() 
 {
 	for (;;) {
+		cli();
 		acquire(&ptable.lock);
 		for (int i = 0; i < PROCS; i++) {
 			if (ptable.procs[i].state != RUNNABLE) {
 				continue;
 			}	
+			cprintf("scheduler: ", TYPE_STR);
+			cprintln(&i, TYPE_HEX);
+
 			proc_load(&ptable.procs[i]);
 			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
 			proc_unload();
 		}
-		release(&ptable.lock);												// scheduler will have a break here
+		release(&ptable.lock);
 		sti();
-		for (int i = 0; i < 500; i++);								// in case that all procs are sleeping.
-		cprintf("debug", TYPE_HEX);
-		cli();
 	}
 }
 
@@ -282,7 +308,7 @@ yield()
 void
 sleep(void *channel, lock *lw_lock) 
 {
-	if (cpu.loaded == false)												// be careful of 'lost wake up'
+	if (cpu.proc == NULL)														// be careful of 'lost wake up'
 		panic("sleep: no proc loaded");								// and 'multiple sleepers' problems.
 	if (lw_lock == NULL)														// before calling sleep() lw_lock must
 		panic("sleep: lw_lock not obtained");					// be acquired !
@@ -324,8 +350,9 @@ wakeup(void *channel)
 {
 	acquire(&ptable.lock);
 	for (uint i = 0; i < PROCS; i++) {
-		if (ptable.procs[i].state == SLEEPING && ptable.procs[i].channel == channel)
+		if (ptable.procs[i].state == SLEEPING && ptable.procs[i].channel == channel) {
 			ptable.procs[i].state = RUNNABLE;
+		}
 	}
 	release(&ptable.lock);
 }

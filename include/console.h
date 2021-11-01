@@ -12,4 +12,11 @@
 #define CGA_COL_SIZE 80
 #define CGA_STD_ATR 0x07
 
+struct cga {
+	lock lock;
+	uchar buf[CGA_SIZE];
+	uchar atr[CGA_SIZE];
+	uint pos;
+};
+
 #endif

@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o target/initcode2
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o -b binary target/initcode target/initcode2
+target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o target/initcode1 target/initcode2
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o -b binary target/initcode target/initcode1 target/initcode2
 
 target/main.o: init/main.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -Iinclude -c init/main.c -o target/main.o
@@ -81,6 +81,11 @@ target/initcode: kernel/initcode.S
 	$(CC) $(CFLAGS) -nostdinc -Iinclude -c kernel/initcode.S -o target/initcode.o
 	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o target/initcode.out target/initcode.o
 	$(OBJCOPY) -S -O binary target/initcode.out target/initcode
+
+target/initcode1: kernel/initcode1.S
+	$(CC) $(CFLAGS) -nostdinc -Iinclude -c kernel/initcode1.S -o target/initcode1.o
+	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o target/initcode1.out target/initcode1.o
+	$(OBJCOPY) -S -O binary target/initcode1.out target/initcode1
 
 target/initcode2: kernel/initcode2.S
 	$(CC) $(CFLAGS) -nostdinc -Iinclude -c kernel/initcode2.S -o target/initcode2.o

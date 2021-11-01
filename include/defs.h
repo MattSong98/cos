@@ -105,6 +105,7 @@ extern void tss_setup(ushort, uint);
 
 // panic.c
 extern void panic(char *);
+extern void pannic(char *, uint);
 
 // string.c
 extern void strcpy(char *, char *);

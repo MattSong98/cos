@@ -73,7 +73,7 @@ init:
 		mov ax, DATA
 		mov ds, ax
 		mov ss, ax
-		mov esp, 0xA0000
+		mov esp, 0x90000
 		jmp CODE:0
 
 ; ###########################################

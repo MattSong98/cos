@@ -5,4 +5,4 @@ start:
 	int $0x30
 
 spin:
-	jmp start
+	jmp spin

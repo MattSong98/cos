@@ -108,13 +108,8 @@ ide_intr()
 	acquire(&ide_queue.lock);
 	if (ide_queue.head == NULL)
 		panic("ide_intr: ide queue empty");
-	struct ide_buf *p = ide_queue.head;
-	ide_queue.head = ide_queue.head->qnext;
-	if (ide_queue.head != NULL) {
-		ide_start(ide_queue.head);
-	}	
-	release(&ide_queue.lock);
 	
+	struct ide_buf *p = ide_queue.head;
 	if (!(p->flags & IDE_BUF_DIRTY)) {	// whether to copy data
 		uchar r;
 		while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
@@ -122,6 +117,13 @@ ide_intr()
 			panic("ide_intr: data error");
 		insl(IDE_DATA_PORT, p->data, 512/4);
 	}
+
+	ide_queue.head = ide_queue.head->qnext;
+	if (ide_queue.head != NULL) {
+		ide_start(ide_queue.head);
+	}	
+	release(&ide_queue.lock);
+	
 	p->flags |= IDE_BUF_VALID;	// set flag:valid
 	p->flags &= ~IDE_BUF_DIRTY;	// clear flag:dirty
 	
@@ -159,7 +161,7 @@ ide_sync(struct ide_buf *p)
 	} else {
 		struct ide_buf *q;
 		for (q = ide_queue.head; q->qnext; q = q->qnext);
-		q->next = p;
+		q->qnext = p;
 	}
 	release(&ide_queue.lock);
 
@@ -193,8 +195,6 @@ loop:
 				release(&ide_cache.lock);
 				return p;
 			} else {
-				// release(&ide_cache.lock);
-				// return NULL;	// busy now, return or sleep until it's available
 				sleep(p, &ide_cache.lock);
 				goto loop;
 			}

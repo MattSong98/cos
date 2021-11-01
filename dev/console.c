@@ -10,12 +10,7 @@
 
 /* shared */
 
-static struct cga {
-	lock lock;
-	uchar buf[CGA_SIZE];
-	uchar atr[CGA_SIZE];
-	uint pos;
-} cga;
+struct cga cga;
 
 
 //--------------------------

@@ -85,7 +85,6 @@ struct tss
 };
 
 struct cpu {
-	bool loaded;
 	struct tss ts;
 	struct context *sched_ctx;
 	struct proc *proc;

@@ -30,14 +30,6 @@
 struct gate_desc idt[IDT_SIZE];
 
 
-/* shared */
-
-static struct {
-	lock lock;
-	uint count;
-} tick;
-
-
 //--------------------------
 //
 //    function : init 
@@ -57,7 +49,6 @@ set_gate(struct gate_desc *p, uint offset, ushort cs, ushort type) {
 void 
 idt_init()
 {
-	lock_init(&tick.lock);
 	for (ushort i = 0; i < IDT_SIZE; i++) 
 		set_gate(idt+i, vectors[i], CODE_SEL, INTERRUPT_GATE);	
 	set_gate(idt+T_SYSCALL, vectors[T_SYSCALL], CODE_SEL, TRAP_GATE);	
@@ -83,9 +74,11 @@ trap(struct trapframe *tf)
 	
 		case T_TIMER:
 			pic_send_eoi(IRQ_TIMER);
-			if (cpu.loaded == true) {
+			static uint count = 0;
+			if (count++ < 10)
+				return;
+			if (cpu.proc != NULL)
 				yield();
-			}
 			break;
 		
 		case T_KBD:
@@ -98,11 +91,11 @@ trap(struct trapframe *tf)
 			ide_intr();
 			break;
 		
-		case T_SPUR7:	// spurious interrupts
+		case T_SPUR7:	
 		case T_SPUR15:
 			break;
 
-		default:	// exceptions
+		default:	
 			cprintln(&(tf->trapno), TYPE_HEX);
 			panic("trap: exceptions");
 	}
