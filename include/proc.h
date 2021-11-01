@@ -31,7 +31,7 @@ struct proc
 	struct pte pgtab[PTES];
 	uchar kstack[KSTACK_SIZE];
 	enum proc_state state;
-	int pid;
+	uint pid;
 	struct proc *parent;
 	struct trapframe *tf;
 	struct context *ctx;

@@ -83,7 +83,7 @@ extern void user_init(void);
 extern void fork(void);
 extern void exec(void);
 extern void exit(void);
-extern void wait(void);
+extern int wait(void);
 extern void yield(void);
 extern void sleep(void *, lock *);
 extern void wakeup(void *);

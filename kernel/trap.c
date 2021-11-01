@@ -75,8 +75,9 @@ trap(struct trapframe *tf)
 		case T_TIMER:
 			pic_send_eoi(IRQ_TIMER);
 			static uint count = 0;
-			if (count++ < 10)
+			if (count++ < 10) 
 				return;
+			count = 0;
 			if (cpu.proc != NULL)
 				yield();
 			break;

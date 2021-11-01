@@ -40,6 +40,11 @@ struct {
 struct cpu cpu;
 
 
+/* shared */
+
+static lock lw_lock;
+
+
 //----------------------------------------------------------------------------------------------------------------
 //
 //   																		  functions : init 
@@ -191,9 +196,9 @@ user_init()
 	strcpy(p->name, "init");	
 	p->parent = NULL;
 	strcpy(q->name, "init1");	
-	q->parent = NULL;
+	q->parent = &ptable.procs[0];
 	strcpy(r->name, "init2");	
-	r->parent = NULL;
+	r->parent = &ptable.procs[0];
 
 	// initialize user space
 	uvm_setup(p->pgtab, _binary_target_initcode_start, (uint)_binary_target_initcode_size);
@@ -234,7 +239,7 @@ user_init()
 	r->tf->esp = PAGE_SIZE;
 	r->tf->eip = 0;
 	
-	// p->state = RUNNABLE;
+	p->state = RUNNABLE;
 	q->state = RUNNABLE;
 	r->state = RUNNABLE;
 }
@@ -328,22 +333,35 @@ sleep(void *channel, lock *lw_lock)
 }
 
 
+// lock order: lw_lock -> ptable.lock
+
 void 
 exit()
 {
-
+	acquire(&lw_lock);
+	wakeup(cpu.proc->parent);
+	acquire(&ptable.lock);
+	release(&lw_lock);
+	for (uint i = 0; i < PROCS; i++) {
+		if (ptable.procs[i].parent == cpu.proc)
+			ptable.procs[i].parent = &ptable.procs[0];
+	}
+	cpu.proc->state = ZOMBIE;
+	swtch(&(cpu.proc->ctx), cpu.sched_ctx);
+	panic("exit: return");
 }
 
 
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 //
-//   functions : critical 
+//   																		  functions : critical 
 //
-//--------------------------
+//----------------------------------------------------------------------------------------------------------------
 
 
 // counterparts of sleep()
 // wake up all procs sleeping on 'channel'
+
 
 void
 wakeup(void *channel) 
@@ -356,6 +374,60 @@ wakeup(void *channel)
 	}
 	release(&ptable.lock);
 }
+
+
+// lock order: lw_lock -> ptable.lock
+
+
+int
+wait()
+{
+	cprintf("wait", TYPE_STR);
+	pannic("debug", 100);
+	bool has_child = false;
+	acquire(&lw_lock);	
+loop:
+	acquire(&ptable.lock);
+	for (uint i = 0; i < PROCS; i++) {
+		if (ptable.procs[i].parent == cpu.proc) {
+			has_child = true;
+			// zombie child found
+			if (ptable.procs[i].state == ZOMBIE) {
+				struct proc *child = &ptable.procs[i];
+				memset(child->pgtab, 0, sizeof(struct pte) * PTES);
+				memset(child->kstack, 0, sizeof(uchar) * KSTACK_SIZE);
+				memset(child->name, 0, sizeof(char) * PROC_NAME_SIZE);
+				child->parent = NULL;
+				child->tf = NULL;
+				child->ctx = NULL;
+				child->channel = NULL;
+				child->state = UNUSED;
+				release(&ptable.lock);
+				release(&lw_lock);
+				cprintln("clean up", TYPE_STR);
+				return child->pid;
+			}
+		}
+	}
+	// child not found
+	if (has_child == false) {
+		release(&ptable.lock);
+		release(&lw_lock);
+		return -1;
+	}
+	// child found but not zombie
+	release(&ptable.lock);
+	sleep(cpu.proc, &lw_lock);
+	goto loop;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------
+//
+//   																		  functions : critical 
+//
+//----------------------------------------------------------------------------------------------------------------
+
 
 /* critical */
 void 
@@ -373,29 +445,9 @@ exec()
 
 
 /* critical */
-void
-wait()
-{
-
-}
-
-/* critical */
 void 
 kill()
 {
 
 }
 
-void 
-proc_dump()
-{
-	cprintf("pid: ", TYPE_STR);
-	cprintf(&(ptable.procs[0].pid), TYPE_HEX);
-	cprintf("  state: ", TYPE_STR);
-	cprintln(&(ptable.procs[0].state), TYPE_HEX);
-	cprintf("pid: ", TYPE_STR);
-	cprintf(&(ptable.procs[1].pid), TYPE_HEX);
-	cprintf("  state: ", TYPE_STR);
-	cprintln(&(ptable.procs[1].state), TYPE_HEX);
-	
-}
