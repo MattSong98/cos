@@ -1,7 +1,7 @@
 #ifndef _PROC_H
 #define _PROC_H
 
-#define PROCS 32
+#define PROCS 16
 #define PROC_NAME_SIZE	16
 #define KSTACK_SIZE	4096
 
@@ -33,7 +33,7 @@ struct proc
 	enum proc_state state;
 	uint pid;
 	struct proc *parent;
-	struct trapframe *tf;
+	struct trapframe *tf;	// refer to the first trapframe (U => K)
 	struct context *ctx;
 	void *channel;	// resource to wait for
 	// int killed;
