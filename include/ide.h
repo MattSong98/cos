@@ -8,8 +8,9 @@
 #define IDE_RO	0x00
 #define IDE_RW	0x01
 
-#define IDE_BUF_SIZE	512	// buf size
-#define IDE_BUFS 16	// cache size
+#define IDE_SECTOR_SIZE	512
+#define IDE_BUF_SIZE		512	// buf size
+#define IDE_BUFS 				16	// cache size
 
 // control block registers
 #define IDE_CTRL_PORT	0x3F6

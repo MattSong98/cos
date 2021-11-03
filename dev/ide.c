@@ -95,7 +95,7 @@ ide_start(struct ide_buf *p)
 	outb(IDE_POS3_PORT, ((p->sector >> 24) & 0x0F) | IDE_MASTER);
 	if (p->flags & IDE_BUF_DIRTY) {	// write | read
 		outb(IDE_COMD_PORT, IDE_COMD_WRITE);
-		outsl(IDE_DATA_PORT, p->data, 512/4);
+		outsl(IDE_DATA_PORT, p->data, IDE_SECTOR_SIZE/4);
 	} else {
 		outb(IDE_COMD_PORT, IDE_COMD_READ);
 	}
@@ -115,7 +115,7 @@ ide_intr()
 		while (((r = inb(IDE_STAT_PORT)) & (IDE_STAT_BUSY | IDE_STAT_DRDY)) != IDE_STAT_DRDY);
 		if ((r & (IDE_STAT_DF|IDE_STAT_ERR)) != 0) 
 			panic("ide_intr: data error");
-		insl(IDE_DATA_PORT, p->data, 512/4);
+		insl(IDE_DATA_PORT, p->data, IDE_SECTOR_SIZE/4);
 	}
 
 	ide_queue.head = ide_queue.head->qnext;
