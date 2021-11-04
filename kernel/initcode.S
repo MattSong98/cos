@@ -1,6 +1,8 @@
 .text
 
 start:
-	mov $0x40, %eax		# wait
+	mov $0x10000, %eax		# test
 	int $0x30
-	jmp start
+
+spin:
+	jmp spin

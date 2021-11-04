@@ -1,44 +1,42 @@
 #include "defs.h"
 
+extern void superblock_store(struct superblock sb);
+extern struct superblock superblock_load();
+extern int balloc(uint);
+extern void bfree(uint, uint);
+
 void 
 syscall()
 {
-	// sys_hello
-	if (cpu.proc->tf->eax == 0x00)
-		cprintln("hello", TYPE_STR);
+	if (cpu.proc->tf->eax == 0x10000) {
+		uint bias = 0;
+		uint off = 6 + bias;
+		uint n = 1;
+		for (uint i = off; i < off + n; i++)
+			bfree(ROOTDEV, i);
+	}
 
-	// sys_bonjour
-	if (cpu.proc->tf->eax == 0x10)
-		cprintln("bonjour", TYPE_STR);
-
-	// sys_disk
-	if (cpu.proc->tf->eax == 0x20) {
-		for (int i = 0; i < 4; i++) {
-			struct ide_buf *p = ide_bget(1, i, IDE_RW);
-			p->data[0] = 0x11;
-			p->data[1] = 0x11;
-			ide_brelse(p);
+	if (cpu.proc->tf->eax == 0x10001) {
+		uint block_loc = 0;
+		uint pre = 0;
+		while (1) {
+			block_loc = balloc(ROOTDEV);
+			if (block_loc == -1) {
+				cprintln(&pre, TYPE_HEX);
+				panic("debug");	
+			}
+			pre = block_loc;
 		}
 	}
 
-	// sys_disk
-	if (cpu.proc->tf->eax == 0x30) {
-		for (int i = 0; i < 6; i++) {
-			struct ide_buf *p = ide_bget(1, i, IDE_RW);
-			p->data[1] = 0x99;
-			p->data[2] = 0x99;
-			ide_brelse(p);
-		}
-	}
+	// syscall test	
+	if (cpu.proc->tf->eax == 0x10001) {
+		struct superblock sb;
+		sb.n_inode_block = 1;
+		sb.n_bmap_block = 3;
+		sb.n_data_block = 4096 + 4096 + 1024;
+		sb.n_block = 2 + sb.n_inode_block + sb.n_bmap_block + sb.n_data_block;
+		superblock_store(sb);
+	}	
 
-	// sys_wait	
-	if (cpu.proc->tf->eax == 0x40) {
-		wait();
-	}
-
-	// sys_exit
-	if (cpu.proc->tf->eax == 0x50) {
-		cprintln("exit", TYPE_STR);
-		exit();
-	}
-}
+}	

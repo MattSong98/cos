@@ -17,6 +17,7 @@
 #include "pic.h"
 #include "trap.h"
 #include "timer.h"
+#include "fs.h"
 #include "string.h"
 #include "proc.h"
 

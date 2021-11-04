@@ -75,7 +75,6 @@ trap(struct trapframe *tf)
 		case T_TIMER:
 			pic_send_eoi(IRQ_TIMER);
 			static uint count = 0;
-			cprintf(&count, TYPE_HEX);
 			if (count++ < 2) 
 				return;
 			count = 0;

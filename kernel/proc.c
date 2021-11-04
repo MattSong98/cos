@@ -240,8 +240,8 @@ user_init()
 	r->tf->eip = 0;
 	
 	p->state = RUNNABLE;
-	q->state = RUNNABLE;
-	r->state = RUNNABLE;
+	//q->state = RUNNABLE;
+	//r->state = RUNNABLE;
 }
 
 
@@ -281,8 +281,8 @@ scheduler()
 			if (ptable.procs[i].state != RUNNABLE) {
 				continue;
 			}	
-			cprintf("scheduler: ", TYPE_STR);
-			cprintln(&i, TYPE_HEX);
+			// cprintf("scheduler: ", TYPE_STR);
+			// cprintln(&i, TYPE_HEX);
 
 			proc_load(&ptable.procs[i]);
 			swtch(&(cpu.sched_ctx), cpu.proc->ctx);
@@ -383,8 +383,6 @@ wakeup(void *channel)
 int
 wait()
 {
-	cprintf("wait", TYPE_STR);
-	pannic("debug", 100);
 	bool has_child = false;
 	acquire(&lw_lock);	
 loop:
@@ -405,7 +403,6 @@ loop:
 				child->state = UNUSED;
 				release(&ptable.lock);
 				release(&lw_lock);
-				cprintln("clean up", TYPE_STR);
 				return child->pid;
 			}
 		}
