@@ -104,6 +104,18 @@ extern void gdt_init(void);
 extern void uvm_setup(struct pte *, uchar *, uint);
 extern void tss_setup(ushort, uint);
 
+// fs.c
+extern void fs_init(void);
+extern uint balloc(uint);
+extern void bfree(uint, uint);
+extern uint inode_alloc(uint, inode_t);
+extern struct inode *inode_get(uint, uint);
+extern void inode_put(struct inode *);
+extern void inode_lock(struct inode *); 
+extern void inode_unlock(struct inode *); 
+extern int inode_read(struct inode *, char *, uint, uint);
+extern int inode_write(struct inode *, char *, uint, uint);
+
 // panic.c
 extern void panic(char *);
 extern void pannic(char *, uint);

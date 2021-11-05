@@ -7,30 +7,32 @@
 
 #define ROOTDEV 				1
 #define BLOCK_SIZE			512
-#define INODES					64	// in-memory inodes bufs
+#define INODES					12												// in-memory inodes bufs
 
 #define IPB							(BLOCK_SIZE/sizeof(struct dinode))
 #define BPB							(BLOCK_SIZE*8)
-#define BOOTBLOCK				0	// bootblock offset
-#define SUPERBLOCK			1	// superblock offset
-#define INODEBLOCK(x)		((x/IPB)+SUPERBLOCK+1)	// inode block offset, x = 0 denotes the first inode entry.
+#define BOOTBLOCK				0													// bootblock offset
+#define SUPERBLOCK			1													// superblock offset
+#define INODEBLOCK(x)		((x/IPB)+SUPERBLOCK+1)		// inode block offset, x = 0 denotes the first inode entry.
 
-#define FILE_BLOCKS			14	
-#define DIRECTS					12	// max directly indexed blocks a file can possess.				
-#define INDIRECTS				((FILE_BLOCKS-DIRECTS)*(BLOCK_SIZE/sizeof(uint)))	// indirectly indexes blocks.
+#define DIRECTS					12												// directly indexed blocks
+#define INDIRECTS				(BLOCK_SIZE/sizeof(uint))	// indirectly indexes blocks
+#define FILE_BLOCKS			(DIRECTS+1)
+#define MAX_FILE				(DIRECTS+INDIRECTS)
 
-#define DIRENTS					14	// max entries in one directory.
+#define DIRENTS					14												// max entries in one directory.
 
-#define FILES						32	// max files in ftable
+#define FILES						32												// max files in ftable
 
 typedef enum {
+	EMPTY,
 	FILE,
 	DIR,
 	DEV
 } inode_t;
 
 struct superblock {
-	uint n_block;	// how many blocks
+	uint n_block;				// how many blocks
 	uint n_inode_block;	// how many inode blocks
 	uint n_bmap_block;	// how many bit map blocks
 	uint n_data_block;	// how many data blocks
@@ -38,26 +40,19 @@ struct superblock {
 
 struct dinode {
 	inode_t type;
-	ushort major;
-	ushort minor;
-	ushort n_link;	// how many dirent referring to it
-	uint size;	// size of file (bytes)
+	uint major;		// for type = DEV
+	uint minor;		// for type = DEV
+	uint n_link;	// how many dirents referring to it
+	uint size;		// size of file (bytes)
 	uint ads[FILE_BLOCKS];
 };
 
 struct inode {
-	uint dev;
+	uint dev;		// inode(dev, inum) 
 	uint inum;
-	int ref;
-	int flags;
-
-	// copy from dinode
-	inode_t type;
-	ushort major;
-	ushort minor;
-	ushort n_link;
-	uint size;
-	uint ads[FILE_BLOCKS];
+	uint ref;		// free if ref = 0
+	bool lock;	
+	struct dinode data;
 };
 
 struct file {
