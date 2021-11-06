@@ -253,6 +253,7 @@ inode_get(uint dev, uint inum)
 	if (empty == NULL) {
 		panic("inode_get: run out of inodes");
 	}
+	
 	empty->dev = dev;
 	empty->inum = inum;
 	empty->ref = 1;
@@ -563,6 +564,7 @@ skipelem(char *path, char *name)
   return path;
 }
 
+/* so many bugs */
 struct inode *
 inode_path(char *path) 
 {
@@ -573,19 +575,22 @@ inode_path(char *path)
 	if (*path == '/')
 		ip = inode_get(ROOTDEV, ROOTINO);
 	else
-		ip = inode_dup(cpu.proc->cwd);
+		ip = inode_path(cpu.proc->cwd);
 
 	while ((path = skipelem(path, name)) != NULL) {
 		inode_lock(ip);
 		if (ip->data.type != DIR) {
 			inode_unlock(ip);
+			inode_put(ip);
 			return NULL;
 		}
 		if ((next = dirlookup(ip, name, 0)) == 0) {
 			inode_unlock(ip);
+			inode_put(ip);
 			return NULL;
 		}
 		inode_unlock(ip);
+		inode_put(ip);
 		ip = inode_get(ROOTDEV, next);
 	}
 	return ip;

@@ -12,12 +12,13 @@ syscall()
 {
 	// inode_path
 	if (cpu.proc->tf->eax == 0x10000) {
-		panic("debug");
 		struct inode *ip = inode_path("/home/mattsong");
 		if (ip == NULL)
 			panic("panic! path not found");
 		inode_lock(ip);
-		cprintln(&ip->data.size, TYPE_HEX);
+		mkdir(ip, "desktop");
+		inode_unlock(ip);
+		inode_put(ip);
 		panic("debug");
 	}
 

@@ -239,9 +239,9 @@ user_init()
 	r->tf->esp = PAGE_SIZE;
 	r->tf->eip = 0;
 
-	p->cwd = inode_get(ROOTDEV, ROOTINO);
-	//q->cwd = inode_get(ROOTDEV, ROOTINO);
-	//r->cwd = inode_get(ROOTDEV, ROOTINO);
+	strcpy(p->cwd, "/");
+	strcpy(q->cwd, "/");
+	strcpy(r->cwd, "/");
 	
 	p->state = RUNNABLE;
 	//q->state = RUNNABLE;

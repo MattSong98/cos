@@ -1,3 +1,5 @@
+// dependency: fs.h
+
 #ifndef _PROC_H
 #define _PROC_H
 
@@ -38,7 +40,7 @@ struct proc
 	void *channel;	// resource to wait for
 	// int killed;
 	// struct file *ofile[NOFILE];
-	struct inode *cwd;
+	char cwd[DIRSIZE];
 	char name[PROC_NAME_SIZE];
 };
 
