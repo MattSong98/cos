@@ -520,6 +520,53 @@ rmdir(struct inode *dp, char *name)
 	return true;
 }
 
+struct inode *
+getcwd()
+{
+	if (!cpu.proc->cwd)
+		return inode_get(ROOTDEV, ROOTINO);
+	return cpu.proc->cwd;
+}
+
+
+bool 
+chdir(char *path)
+{
+	// check if path is valid
+	struct inode *ip = inode_path(path);
+	if (ip && ip->data.type == DIR) {
+		inode_put(cpu.proc->cwd);
+		cpu.proc->cwd = ip;
+		return true; 
+	}
+	return false;
+}
+
+
+void
+lsdir(char *path, char *dst)
+{
+	struct dirent dirent;
+	struct inode *ip = inode_path(path);
+	if (ip && ip->data.type == DIR) {
+		inode_lock(ip);
+		for (uint off = 0; off < ip->data.size; off += sizeof(dirent)) {
+			if (inode_read(ip, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+				panic("lsdir: reading failure");
+			if (dirent.inum == 0)
+				continue;
+			// valid entry
+			uint len = strlen(dirent.name) + 1;
+			memmove(dst, dirent.name, len);
+			dst += len;
+		}
+		inode_unlock(ip);
+		inode_put(ip);
+	}
+	*dst = '\0';
+}
+
+
 //--------------------------
 //
 //   function : critical
@@ -574,8 +621,8 @@ inode_path(char *path)
 
 	if (*path == '/')
 		ip = inode_get(ROOTDEV, ROOTINO);
-	else
-		ip = inode_path(cpu.proc->cwd);
+	else 
+		ip = inode_dup(cpu.proc->cwd = getcwd());
 
 	while ((path = skipelem(path, name)) != NULL) {
 		inode_lock(ip);

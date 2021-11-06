@@ -6,20 +6,33 @@ extern bool dirlink(struct inode *dp, char *name, uint inum);
 extern void mkdir(struct inode *, char *);
 extern bool rmdir(struct inode *, char *);
 extern struct inode *inode_path(char *path);
+extern void lsdir(char *, char *);
 
 void 
 syscall()
 {
-	// inode_path
+	// lsdir
 	if (cpu.proc->tf->eax == 0x10000) {
-		struct inode *ip = inode_path("/home/mattsong");
-		if (ip == NULL)
-			panic("panic! path not found");
+		char str[64], *p = str;
+		lsdir("home/mattsongs", str);
+		while (strlen(p) != 0) {
+			cprintln(p, TYPE_STR);
+			p += strlen(p) + 1;
+		}
+		panic("done!");
+	}	
+
+	// inode_path
+	if (cpu.proc->tf->eax == 0x10001) {
+		if (chdir("home/mattsong/desktop") == false)
+			panic("panic! path not valid");
+		struct inode *ip = inode_path(".");
 		inode_lock(ip);
-		mkdir(ip, "desktop");
+		if (rmdir(ip, "tmp") == false)
+			panic("panic! rmdir");
 		inode_unlock(ip);
 		inode_put(ip);
-		panic("debug");
+		panic("done!");
 	}
 
 	// rmdir

@@ -239,10 +239,6 @@ user_init()
 	r->tf->esp = PAGE_SIZE;
 	r->tf->eip = 0;
 
-	strcpy(p->cwd, "/");
-	strcpy(q->cwd, "/");
-	strcpy(r->cwd, "/");
-	
 	p->state = RUNNABLE;
 	//q->state = RUNNABLE;
 	//r->state = RUNNABLE;

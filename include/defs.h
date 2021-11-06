@@ -113,6 +113,9 @@ extern void inode_lock(struct inode *);
 extern void inode_unlock(struct inode *); 
 extern int inode_read(struct inode *, char *, uint, uint);
 extern int inode_write(struct inode *, char *, uint, uint);
+extern struct inode *getcwd(void);
+extern struct inode *inode_path(char *);
+extern bool chdir(char *);
 
 // panic.c
 extern void panic(char *);
@@ -124,5 +127,6 @@ extern void *memset(void *, int, uint);
 extern void *memmove(void *, const void *, uint);
 extern int strncmp(const char *, const char *, uint);
 extern int strcmp(const char *, const char *);
+extern uint strlen(const char *);
 
 #endif

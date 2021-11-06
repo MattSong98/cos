@@ -72,3 +72,13 @@ memmove(void *dst, const void *src, uint n)
   return dst;
 }
 
+uint
+strlen(const char *s)
+{
+  uint n;
+
+  for(n = 0; s[n]; n++)
+    ;
+  return n;
+}
+
