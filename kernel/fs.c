@@ -1,3 +1,6 @@
+// check out the locks
+
+
 #include "defs.h"
 
 
@@ -72,14 +75,13 @@ superblock_store(struct superblock sb)
 // by min(n_data_block, BPB * n_bmap_block).
 
 
-uint 
+static uint 
 balloc(uint dev)
 {
 	struct superblock sb = superblock_load();
 	uint bmap_off = sb.n_inode_block + 2;
 	for (uint i = bmap_off; i < bmap_off + sb.n_bmap_block; i++) {
 		struct ide_buf *p = ide_bget(dev, i, IDE_RW);
-		// char *data = p->data;
 		for (uint j = 0; j < IDE_BUF_SIZE; j++) {
 			if (p->data[j] == 0xFF)
 				continue;
@@ -109,7 +111,7 @@ balloc(uint dev)
 // block_loc = block_off + block_bias
 
 
-void 
+static void 
 bfree(uint dev, uint block_loc)
 {
 	struct superblock sb = superblock_load();
@@ -150,6 +152,8 @@ inode_alloc(uint dev, inode_t type)
 	for (uint i = inode_off; i < inode_off + sb.n_inode_block; i++) {
 		struct ide_buf *p = ide_bget(dev, i, IDE_RW);
 		for (uint j = 0; j < IPB; j++) {
+			if (i == inode_off && j == 0)	// inum:0 is not used
+				continue;
 			struct dinode *dip = (struct dinode *) &p->data[j * sizeof(struct dinode)];
 			if (dip->type != EMPTY)
 				continue;
@@ -320,6 +324,16 @@ inode_unlock(struct inode *ip)
 }
 
 
+struct inode *
+inode_dup(struct inode *ip) 
+{
+	acquire(&inode_cache.lock);
+	ip->ref++;
+	release(&inode_cache.lock);
+	return ip;
+}
+
+
 // return the address of (n+1)th data block of inode p
 // alloc a new one if it doesn't exist.
 // return -1 if run out of data block
@@ -406,31 +420,175 @@ inode_write(struct inode *ip, char *src, uint off, uint n)
 
 
 // look for a directory entry in a directory.
+// return the inum if found otherwise return 0.
 // if found set *poff to byte offset of entry.
-// caller must have already locked up.
+// caller must have already locked up dp.
 
 
-struct inode *
-dir_lookup(struct inode *dp, char *name, uint *poff) 
+uint
+dirlookup(struct inode *dp, char *name, uint *poff) 
 {
-	return NULL;
+	if (dp->data.type != DIR)
+		panic("dirlookup: not a directory");
+
+	struct dirent dirent;
+	for (uint off = 0; off < dp->data.size; off += sizeof(dirent)) {
+		if (inode_read(dp, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+			panic("dirlookup: invalid dirent");
+		if (dirent.inum == 0)	// empty dirent
+			continue;
+		if (strcmp(dirent.name, name) != 0)
+			continue;
+		// found
+		*poff = off;
+		return dirent.inum;
+	}
+	return 0;
 }
 
 
 // write a new directory entry (name, inum) into the directory dp.
 
 
-int 
+bool
 dirlink(struct inode *dp, char *name, uint inum)
 {
-	return 0;
+	struct dirent dirent;
+	uint empty = dp->data.size;
+	for (uint off = 0; off < dp->data.size; off += sizeof(dirent)) {
+		if (inode_read(dp, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+			panic("dirlink: invalid dirent");
+		if (dirent.inum == 0) {
+			if (empty == dp->data.size)
+				empty = off;
+			continue;
+		}
+		if (strcmp(dirent.name, name) == 0)
+			return false;
+	}
+
+	memset(dirent.name, 0, DIRSIZE);
+	strcpy(dirent.name, name);
+	dirent.inum = inum;
+	
+	if (inode_write(dp, (char *) &dirent, empty, sizeof(dirent)) != sizeof(dirent))
+		panic("dirlink: run out of space writing dirent");
+	return true;
 }
 
+
+void
+mkdir(struct inode *dp, char *name)
+{
+	uint inum = inode_alloc(dp->dev, DIR);
+	struct inode *ndp = inode_get(dp->dev, inum);
+	inode_lock(ndp);
+	if (dirlink(dp, name, inum) == true)
+		ndp->data.n_link = 1;
+	dirlink(ndp, "..", dp->inum);
+	dirlink(ndp, ".", inum);
+	inode_unlock(ndp);
+	inode_put(ndp);
+}
+
+// warning!! potential deadlock 
+// never lock another inode when holding one.
+
+bool
+rmdir(struct inode *dp, char *name)
+{
+	uint inum, off;
+	if ((inum = dirlookup(dp, name, &off)) == 0)
+		return false;
+	// found
+	struct inode *tdp = inode_get(dp->dev, inum);
+	inode_lock(tdp);
+	if (tdp->data.size > sizeof(struct dirent) * 2) {	// not empty
+		inode_unlock(tdp);
+		inode_put(tdp);
+		return false;	
+	} 
+	tdp->data.n_link--;
+	inode_unlock(tdp);
+	inode_put(tdp);
+	// erase dirent
+	struct dirent dirent;
+	memset((char *) &dirent, 0, sizeof(dirent));
+	if (inode_write(dp, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+		panic("rmdir: writing failure");
+	return true;
+}
 
 //--------------------------
 //
 //   function : critical
 //
 //--------------------------
+
+
+// Copy the next path element from path into name.
+// Return a pointer to the element following the copied one.
+// The returned path has no leading slashes,
+// so the caller can check *path=='\0' to see if the name is the last one.
+// If no name to remove, return 0.
+//
+// Examples:
+//   skipelem("a/bb/c", name) = "bb/c", setting name = "a"
+//   skipelem("///a//bb", name) = "bb", setting name = "a"
+//   skipelem("a", name) = "", setting name = "a"
+//   skipelem("", name) = skipelem("////", name) = 0
+//
+static char *
+skipelem(char *path, char *name)
+{
+  char *s;
+  int len;
+
+  while(*path == '/')
+    path++;
+  if(*path == 0)
+    return 0;
+  s = path;
+  while(*path != '/' && *path != 0)
+    path++;
+  len = path - s;
+  if(len >= DIRSIZE)
+    memmove(name, s, DIRSIZE);
+  else {
+    memmove(name, s, len);
+    name[len] = 0;
+  }
+  while(*path == '/')
+    path++;
+  return path;
+}
+
+struct inode *
+inode_path(char *path) 
+{
+	struct inode *ip;
+	uint next;
+	char name[DIRSIZE];
+
+	if (*path == '/')
+		ip = inode_get(ROOTDEV, ROOTINO);
+	else
+		ip = inode_dup(cpu.proc->cwd);
+
+	while ((path = skipelem(path, name)) != NULL) {
+		inode_lock(ip);
+		if (ip->data.type != DIR) {
+			inode_unlock(ip);
+			return NULL;
+		}
+		if ((next = dirlookup(ip, name, 0)) == 0) {
+			inode_unlock(ip);
+			return NULL;
+		}
+		inode_unlock(ip);
+		ip = inode_get(ROOTDEV, next);
+	}
+	return ip;
+}
 
 

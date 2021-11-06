@@ -6,6 +6,7 @@
 //  +-------------+-----------------+----------------+-----------------+----------------------+
 
 #define ROOTDEV 				1
+#define ROOTINO					1													// root dir at inode 1, inode 0 is not used (indicate null).
 #define BLOCK_SIZE			512
 #define INODES					12												// in-memory inodes bufs
 
@@ -20,7 +21,7 @@
 #define FILE_BLOCKS			(DIRECTS+1)
 #define MAX_FILE				(DIRECTS+INDIRECTS)
 
-#define DIRENTS					14												// max entries in one directory.
+#define DIRSIZE					14												// max entries in one directory.
 
 #define FILES						32												// max files in ftable
 
@@ -53,6 +54,12 @@ struct inode {
 	uint ref;		// free if ref = 0
 	bool lock;	
 	struct dinode data;
+};
+	
+// size = 16B
+struct dirent {
+	ushort inum;
+	char name[DIRSIZE];
 };
 
 struct file {

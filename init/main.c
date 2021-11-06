@@ -32,6 +32,7 @@ main(void) {
 	ide_init();
 
 	palloc_init();
+	fs_init();
 	proc_init();
 	user_init();
 	scheduler();

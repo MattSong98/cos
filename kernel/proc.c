@@ -238,6 +238,10 @@ user_init()
 	r->tf->eflags = FL_IF;
 	r->tf->esp = PAGE_SIZE;
 	r->tf->eip = 0;
+
+	p->cwd = inode_get(ROOTDEV, ROOTINO);
+	//q->cwd = inode_get(ROOTDEV, ROOTINO);
+	//r->cwd = inode_get(ROOTDEV, ROOTINO);
 	
 	p->state = RUNNABLE;
 	//q->state = RUNNABLE;

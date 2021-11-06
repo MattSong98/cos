@@ -13,6 +13,34 @@ memset(void *dst, int c, uint n)
   return dst;
 }
 
+int
+strncmp(const char *p, const char *q, uint n)
+{
+  while(n > 0 && *p && *p == *q)
+    n--, p++, q++;
+  if(n == 0)
+    return 0;
+  return (uchar)*p - (uchar)*q;
+}
+
+int
+strcmp(const char *p1, const char *p2)
+{
+	const unsigned char *s1 = (const unsigned char *) p1;
+	const unsigned char *s2 = (const unsigned char *) p2;
+	unsigned char c1, c2;
+	
+		do {
+			c1 = (unsigned char) *s1++;
+			c2 = (unsigned char) *s2++;
+			if (c1 == '\0')
+				return c1 - c2;
+		}
+		while (c1 == c2);
+		
+		return c1 - c2;
+}
+
 void 
 strcpy(char *dst, char *src)
 {
@@ -22,6 +50,7 @@ strcpy(char *dst, char *src)
 	}
 	*dst = '\0';
 }
+
 
 void*
 memmove(void *dst, const void *src, uint n)

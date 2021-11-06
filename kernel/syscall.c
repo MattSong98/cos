@@ -1,8 +1,98 @@
 #include "defs.h"
 
+
+extern uint dirlookup(struct inode *dp, char *name, uint *poff);
+extern bool dirlink(struct inode *dp, char *name, uint inum);
+extern void mkdir(struct inode *, char *);
+extern bool rmdir(struct inode *, char *);
+extern struct inode *inode_path(char *path);
+
 void 
 syscall()
 {
+	// inode_path
+	if (cpu.proc->tf->eax == 0x10000) {
+		panic("debug");
+		struct inode *ip = inode_path("/home/mattsong");
+		if (ip == NULL)
+			panic("panic! path not found");
+		inode_lock(ip);
+		cprintln(&ip->data.size, TYPE_HEX);
+		panic("debug");
+	}
+
+	// rmdir
+	if (cpu.proc->tf->eax == 0x10001) {
+		struct inode *rdir = inode_get(ROOTDEV, ROOTINO);
+		inode_lock(rdir);
+		if (rmdir(rdir, "dev") == false)
+			panic("failure");
+		panic("success");
+	}
+
+	// dirlookup
+	if (cpu.proc->tf->eax == 0x10001) {
+		uint off;
+		struct inode *rdir = inode_get(ROOTDEV, ROOTINO);
+		inode_lock(rdir);
+		uint inum = dirlookup(rdir, "..", &off);
+		if (inum == 0)
+			panic("not found");
+		else {
+			cprintln(&inum, TYPE_HEX);
+			cprintln(&off, TYPE_HEX);
+			panic("debug");
+		} 
+	}
+
+	// mkdir 
+	if (cpu.proc->tf->eax == 0x10001) {
+		struct inode *rdir = inode_get(ROOTDEV, ROOTINO);
+		inode_lock(rdir);
+		mkdir(rdir, "dev");
+		inode_unlock(rdir);
+		inode_put(rdir);
+		panic("debug");		
+	}
+
+	if (cpu.proc->tf->eax == 0x10001) {
+		for (int i = 2; i < 14; i++) {
+			struct inode *ip = inode_get(ROOTDEV, i);
+			inode_lock(ip);
+			// rdir->data.n_link = 0;
+			inode_unlock(ip);
+			inode_put(ip);
+		}
+	}
+
+	// initialize fs
+	if (cpu.proc->tf->eax == 0x10001) {
+		if (inode_alloc(ROOTDEV, DIR) != ROOTINO)
+			panic("panic! initialize fs");
+		struct inode *rdir = inode_get(ROOTDEV, ROOTINO);
+		inode_lock(rdir);
+		rdir->data.n_link = 1;
+		if (dirlink(rdir, ".", ROOTINO) == false)
+			panic("panic! initialize fs");
+		if (dirlink(rdir, "..", ROOTINO) == false)
+			panic("panic! initialize fs");
+		inode_unlock(rdir);
+		panic("debug");
+	}
+	
+	// synthesis
+	if (cpu.proc->tf->eax == 0x10001) {
+		uint inum = inode_alloc(ROOTDEV, FILE);
+		cprintln(&inum, TYPE_HEX);
+		struct inode *ip = inode_get(ROOTDEV, inum);
+		inode_lock(ip);
+		for (uint off = 0; off + 14 <= BLOCK_SIZE * MAX_FILE; off += 14)
+			if (inode_write(ip, "Hello, world!", off, 14) == -1)
+				panic("failed");
+		inode_unlock(ip);
+		panic("debug");
+	}
+
 	// inode_read - bug free
 	if (cpu.proc->tf->eax == 0x10001) {
 		struct inode *ip = inode_get(ROOTDEV, 2);
@@ -29,7 +119,7 @@ syscall()
 
 	// inode_put - bug free
 	if (cpu.proc->tf->eax == 0x10001) {
-		struct inode *ip = inode_get(ROOTDEV, 1);
+		struct inode *ip = inode_get(ROOTDEV, 0);
 		inode_put(ip);
 	}	
 
@@ -68,19 +158,4 @@ syscall()
 		}
 	}
 
-	// bfree - bug free
-	if (cpu.proc->tf->eax == 0x10001) {
-		uint bias = 1;
-		uint off = 7 + bias;
-		uint n = 1;
-		for (uint i = off; i < off + n; i++)
-			bfree(ROOTDEV, i);
-	}
-
-	// balloc - bug free
-	if (cpu.proc->tf->eax == 0x10001) {
-		for (uint i = 0; i < 1025; i++) {
-			balloc(ROOTDEV);
-		}
-	}
 }

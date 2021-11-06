@@ -38,7 +38,7 @@ struct proc
 	void *channel;	// resource to wait for
 	// int killed;
 	// struct file *ofile[NOFILE];
-	// struct inode *cwd;
+	struct inode *cwd;
 	char name[PROC_NAME_SIZE];
 };
 

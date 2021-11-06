@@ -106,8 +106,6 @@ extern void tss_setup(ushort, uint);
 
 // fs.c
 extern void fs_init(void);
-extern uint balloc(uint);
-extern void bfree(uint, uint);
 extern uint inode_alloc(uint, inode_t);
 extern struct inode *inode_get(uint, uint);
 extern void inode_put(struct inode *);
@@ -124,5 +122,7 @@ extern void pannic(char *, uint);
 extern void strcpy(char *, char *);
 extern void *memset(void *, int, uint);
 extern void *memmove(void *, const void *, uint);
+extern int strncmp(const char *, const char *, uint);
+extern int strcmp(const char *, const char *);
 
 #endif
