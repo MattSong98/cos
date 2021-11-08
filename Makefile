@@ -26,8 +26,8 @@ target/boot: init/boot.asm
 target/kernel: target/kernel.out
 	$(OBJCOPY) -O binary -j .text -j .data -j .bss -j .rodata --set-section-flags .bss=alloc,load,contents  target/kernel.out target/kernel
 
-target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/fs.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o target/initcode1 target/initcode2
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/fs.o target/console.o target/kbd.o target/panic.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o -b binary target/initcode target/initcode1 target/initcode2
+target/kernel.out: target/main.o target/vm.o target/console.o target/kbd.o target/fs.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/initcode target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o target/initcode1 target/initcode2
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0x00000000 -o target/kernel.out target/main.o target/vm.o target/fs.o target/console.o target/kbd.o target/pic.o target/trap.o target/trapasm.o target/timer.o target/ide.o target/proc.o target/string.o target/swtch.o target/syscall.o target/spinlock.o target/lconsole.o -b binary target/initcode target/initcode1 target/initcode2
 
 target/main.o: init/main.c
 	$(CC) $(CFLAGS) -fno-pic -O -nostdinc -Iinclude -c init/main.c -o target/main.o
@@ -49,9 +49,6 @@ target/lconsole.o: dev/lconsole.c
 
 target/kbd.o: dev/kbd.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/kbd.c -o target/kbd.o
-
-target/panic.o: kernel/panic.c
-	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c kernel/panic.c -o target/panic.o
 
 target/pic.o: dev/pic.c
 	$(CC) $(CFLAGS) -fno-pic -nostdinc -Iinclude -c dev/pic.c -o target/pic.o

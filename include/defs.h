@@ -56,6 +56,8 @@ extern void console_init(void);
 extern void cprintf(void *, int);
 extern void console_intr(int);
 extern void cprintln(void *, int);
+extern void panic(char *);
+extern void pannic(char *, uint);
 
 // lconsole.c
 extern void lconsole_init(void);
@@ -113,13 +115,11 @@ extern void inode_lock(struct inode *);
 extern void inode_unlock(struct inode *); 
 extern int inode_read(struct inode *, char *, uint, uint);
 extern int inode_write(struct inode *, char *, uint, uint);
-extern struct inode *getcwd(void);
 extern struct inode *inode_path(char *);
-extern bool chdir(char *);
-
-// panic.c
-extern void panic(char *);
-extern void pannic(char *, uint);
+extern bool sys_chdir(char *);
+extern void sys_mkdir(struct inode *, char *);
+extern bool sys_rmdir(struct inode *, char *);
+extern void sys_lsdir(char *, char *);
 
 // string.c
 extern void strcpy(char *, char *);

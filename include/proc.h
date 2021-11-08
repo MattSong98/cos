@@ -4,6 +4,7 @@
 #define PROCS 16
 #define PROC_NAME_SIZE	16
 #define KSTACK_SIZE	4096
+#define OPEN_FILES	16
 
 enum proc_state 
 { 
@@ -37,7 +38,7 @@ struct proc
 	struct context *ctx;
 	void *channel;	// resource to wait for
 	// int killed;
-	// struct file *ofile[NOFILE];
+	struct file *ofile[OPEN_FILES];
 	struct inode *cwd;
 	char name[PROC_NAME_SIZE];
 };

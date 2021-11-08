@@ -23,13 +23,13 @@ struct {
 
 struct {
 	lock lock;
-	struct file file[FILES];
+	struct file files[FILES];
 } ftable;
 
 
 //--------------------------
 //
-//   function : init 
+//   global : init()  
 //
 //--------------------------
 
@@ -42,11 +42,11 @@ fs_init()
 }
 
 
-//--------------------------
+//------------------------------------------------------------------------
 //
-//   function : critical
+//   static : balloc(), bfree(), superblock_store(), superblock_load()
 //
-//--------------------------
+//------------------------------------------------------------------------
 
 
 static struct superblock
@@ -478,100 +478,12 @@ dirlink(struct inode *dp, char *name, uint inum)
 }
 
 
-void
-mkdir(struct inode *dp, char *name)
-{
-	uint inum = inode_alloc(dp->dev, DIR);
-	struct inode *ndp = inode_get(dp->dev, inum);
-	inode_lock(ndp);
-	if (dirlink(dp, name, inum) == true)
-		ndp->data.n_link = 1;
-	dirlink(ndp, "..", dp->inum);
-	dirlink(ndp, ".", inum);
-	inode_unlock(ndp);
-	inode_put(ndp);
-}
-
-// warning!! potential deadlock 
-// never lock another inode when holding one.
-
-bool
-rmdir(struct inode *dp, char *name)
-{
-	uint inum, off;
-	if ((inum = dirlookup(dp, name, &off)) == 0)
-		return false;
-	// found
-	struct inode *tdp = inode_get(dp->dev, inum);
-	inode_lock(tdp);
-	if (tdp->data.size > sizeof(struct dirent) * 2) {	// not empty
-		inode_unlock(tdp);
-		inode_put(tdp);
-		return false;	
-	} 
-	tdp->data.n_link--;
-	inode_unlock(tdp);
-	inode_put(tdp);
-	// erase dirent
-	struct dirent dirent;
-	memset((char *) &dirent, 0, sizeof(dirent));
-	if (inode_write(dp, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
-		panic("rmdir: writing failure");
-	return true;
-}
-
-struct inode *
-getcwd()
-{
-	if (!cpu.proc->cwd)
-		return inode_get(ROOTDEV, ROOTINO);
-	return cpu.proc->cwd;
-}
-
-
-bool 
-chdir(char *path)
-{
-	// check if path is valid
-	struct inode *ip = inode_path(path);
-	if (ip && ip->data.type == DIR) {
-		inode_put(cpu.proc->cwd);
-		cpu.proc->cwd = ip;
-		return true; 
-	}
-	return false;
-}
-
-
-void
-lsdir(char *path, char *dst)
-{
-	struct dirent dirent;
-	struct inode *ip = inode_path(path);
-	if (ip && ip->data.type == DIR) {
-		inode_lock(ip);
-		for (uint off = 0; off < ip->data.size; off += sizeof(dirent)) {
-			if (inode_read(ip, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
-				panic("lsdir: reading failure");
-			if (dirent.inum == 0)
-				continue;
-			// valid entry
-			uint len = strlen(dirent.name) + 1;
-			memmove(dst, dirent.name, len);
-			dst += len;
-		}
-		inode_unlock(ip);
-		inode_put(ip);
-	}
-	*dst = '\0';
-}
-
-
-//--------------------------
+//---------------------------------------
 //
-//   function : critical
-//
-//--------------------------
+//   global : inode_path()
+//   static : skipelem(), getcwd()
+// 
+//---------------------------------------
 
 
 // Copy the next path element from path into name.
@@ -611,7 +523,16 @@ skipelem(char *path, char *name)
   return path;
 }
 
-/* so many bugs */
+
+static struct inode *
+getcwd()
+{
+	if (!cpu.proc->cwd)
+		return inode_get(ROOTDEV, ROOTINO);
+	return cpu.proc->cwd;
+}
+
+
 struct inode *
 inode_path(char *path) 
 {
@@ -644,3 +565,248 @@ inode_path(char *path)
 }
 
 
+//---------------------------------------------------------------------------------
+//
+//   global : file_alloc(), file_close(), file_dup(), file_read(), file_write()
+//
+//---------------------------------------------------------------------------------
+
+
+struct file *
+file_alloc()
+{
+	acquire(&ftable.lock);
+	for (uint i = 0; i < FILES; i++) {
+		if (ftable.files[i].ref != 0)
+			continue;
+		// found
+		ftable.files[i].ref = 1;
+		ftable.files[i].off = 0;
+		ftable.files[i].readable = false;
+		ftable.files[i].writable = false;
+		release(&ftable.lock);
+		return &ftable.files[i];
+	}
+	release(&ftable.lock);
+	return NULL;
+}
+
+
+void 
+file_close(struct file *fp) 
+{
+	acquire(&ftable.lock);
+	if (fp->ref == 0)
+		panic("file_close: no ref");
+	fp->ref--;
+	release(&ftable.lock);
+}
+
+
+struct file *
+file_dup(struct file *fp)
+{
+	acquire(&ftable.lock);
+	if (fp->ref == 0)
+		panic("file_dup: no ref");
+	fp->ref++;
+	release(&ftable.lock);
+	return fp;
+}
+
+
+int 
+file_read(struct file *fp, char *dst, int n)
+{
+	if (fp->readable == false || n < 0)
+		return -1;
+
+	if (fp->type == FD_INODE) {
+		if (!fp->ip)
+			panic("file_read: null inode");
+		inode_lock(fp->ip);
+		if ((n = inode_read(fp->ip, dst, fp->off, n)) > 0)
+			fp->off += n;
+		inode_unlock(fp->ip);
+		return n;
+	} else if (fp->type == FD_PIPE) {
+
+	} 
+	return -1;
+}
+
+
+int
+file_write(struct file *fp, char *src, int n)
+{
+	if (fp->writable == false || n < 0)
+		return -1;
+	
+	if (fp->type == FD_INODE) {
+		if (!fp->ip)
+			panic("file_write: null inode");
+		inode_lock(fp->ip);
+		if ((n = inode_write(fp->ip, src, fp->off, n)) > 0)
+			fp->off += n;
+		inode_unlock(fp->ip);
+		return n;
+	} else if (fp->type == FD_PIPE) {
+
+	}
+	return -1;
+}
+
+
+//--------------------------
+//
+//   function : critical
+//
+//--------------------------
+
+
+void
+sys_mkdir(struct inode *dp, char *name)
+{
+	uint inum = inode_alloc(dp->dev, DIR);
+	struct inode *ndp = inode_get(dp->dev, inum);
+	inode_lock(ndp);
+	if (dirlink(dp, name, inum) == true)
+		ndp->data.n_link = 1;
+	dirlink(ndp, "..", dp->inum);
+	dirlink(ndp, ".", inum);
+	inode_unlock(ndp);
+	inode_put(ndp);
+}
+
+// warning!! potential deadlock 
+// never lock another inode when holding one.
+// it seems that deadlock will not happen 
+// since you won't hold a child's lock while 
+// acquiring that of its parent.
+
+bool
+sys_rmdir(struct inode *dp, char *name)
+{
+	uint inum, off;
+	if ((inum = dirlookup(dp, name, &off)) == 0)
+		return false;
+	// found
+	struct inode *tdp = inode_get(dp->dev, inum);
+	inode_lock(tdp);
+	if (tdp->data.size > sizeof(struct dirent) * 2) {	// not empty
+		inode_unlock(tdp);
+		inode_put(tdp);
+		return false;	
+	} 
+	tdp->data.n_link--;
+	inode_unlock(tdp);
+	inode_put(tdp);
+	// erase dirent
+	struct dirent dirent;
+	memset((char *) &dirent, 0, sizeof(dirent));
+	if (inode_write(dp, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+		panic("rmdir: writing failure");
+	return true;
+}
+
+
+bool 
+sys_chdir(char *path)
+{
+	// check if path is valid
+	struct inode *ip = inode_path(path);
+	if (ip && ip->data.type == DIR) {
+		inode_put(cpu.proc->cwd);
+		cpu.proc->cwd = ip;
+		return true; 
+	}
+	return false;
+}
+
+
+void
+sys_getdir(char *path, char *dst)
+{
+	struct dirent dirent;
+	struct inode *ip = inode_path(path);
+	if (ip && ip->data.type == DIR) {
+		inode_lock(ip);
+		for (uint off = 0; off < ip->data.size; off += sizeof(dirent)) {
+			if (inode_read(ip, (char *) &dirent, off, sizeof(dirent)) != sizeof(dirent))
+				panic("lsdir: reading failure");
+			if (dirent.inum == 0)
+				continue;
+			// valid entry
+			uint len = strlen(dirent.name) + 1;
+			memmove(dst, dirent.name, len);
+			dst += len;
+		}
+		inode_unlock(ip);
+		inode_put(ip);
+	}
+	*dst = '\0';
+}
+
+/*
+// create a file
+// open a file
+// open a dir
+void
+sys_open()
+{
+
+}
+
+// close a file
+// close a dir
+void
+sys_close()
+{
+
+}
+
+// read a file
+// read a dir
+int 
+sys_read()
+{
+
+}
+
+// write a file
+int
+sys_write()
+{
+
+}
+
+// link a file
+void
+sys_link()
+{
+
+}
+
+// remove a file
+// remove a dir
+// unlink a file
+void 
+sys_unlink()
+{
+
+}
+
+// create a dir
+void
+sys_mkdir()
+{
+
+}
+
+ 
+void
+sys_chdir()
+{
+
+}
+*/

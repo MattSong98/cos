@@ -56,7 +56,7 @@ struct inode {
 	struct dinode data;
 };
 	
-// size = 16B
+// size: 16B
 struct dirent {
 	ushort inum;
 	char name[DIRSIZE];
@@ -64,12 +64,12 @@ struct dirent {
 
 struct file {
 	enum { FD_NONE, FD_PIPE, FD_INODE } type;
-	int ref;
 	bool readable;
 	bool writable;
-//	struct pipe *pipe;
-	struct inode *ip;
+	// struct pipe *pipe;
+	uint ref;
 	uint off;
+	struct inode *ip;
 };
 
 #endif
